@@ -1,0 +1,10 @@
+test.c
+labline
+*~
+\#*\#
+.\#*
+*.elc
+auto-save-list/
+__pycache__/
+*.pyc
+*.pyo
