@@ -11,10 +11,8 @@ HEADERS = protocols/wlr-layer-shell-unstable-v1-client-protocol.h \
 	protocols/xdg-shell-client-protocol.h \
 	protocols/ext-workspace-v1-client-protocol.h
 
-TARGET = labline
-
-$(TARGET): $(SOURCES) $(HEADERS)
+labline: $(SOURCES) $(HEADERS)
 	$(CC) $(CFLAGS) $(SOURCES) -o $@ $(LDFLAGS)
 
 clean:
-	rm -f $(TARGET)
+	rm -f labline
