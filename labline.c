@@ -17,68 +17,70 @@ static struct wl_shm *shm;
 static struct zwlr_layer_shell_v1 *layer_shell;
 static struct ext_workspace_manager_v1 *workspace_manager;
 
-struct workspace {
-     struct ext_workspace_handle_v1 *handle;
-     char *name;
-     struct wl_list node;
+struct workspace
+{
+  struct ext_workspace_handle_v1 *handle;
+  char *name;
+  struct wl_list node;
 };
 
-struct wl_list workspaces;
-
+struct wl_list workspaces = NULL;
 static int exit_status = 0;
 
-static void registry_handle_global(void* data,
-                                   struct wl_registry *wl_registry,
-                                   uint32_t name,
-                                   const char *iface,
-                                   uint32_t version)
+static void
+registry_handle_global(void* data, struct wl_registry *wl_registry,
+                       uint32_t name, const char *iface, uint32_t version)
 {
-     /* i'm okay with some code duplication here */
-     uint32_t bind_version;
-     if (strcmp(iface, wl_compositor_interface.name) == 0) {
-          bind_version = MIN(version, (uint32_t)wl_compositor_interface.version);
-          compositor = wl_registry_bind(
-               registry, name, &wl_compositor_interface, bind_version);
-     } else if (strcmp(iface, wl_shm_interface.name) == 0) {
-          bind_version = MIN(version, (uint32_t)wl_shm_interface.version);
-          shm = wl_registry_bind(
-               registry, name, &wl_shm_interface, bind_version);
-     } else if (strcmp(iface, zwlr_layer_shell_v1_interface.name) == 0) {
-          bind_version = MIN(version, (uint32_t)zwlr_layer_shell_v1_interface.version);
-          layer_shell = wl_registry_bind(
-               registry, name, &zwlr_layer_shell_v1_interface, bind_version);
-     } else if (strcmp(iface, ext_workspace_manager_v1_interface.name) == 0) {
-          bind_version = MIN(version, (uint32_t)ext_workspace_manager_v1_interface.version);
-          workspace_manager = wl_registry_bind(
-               registry, name, &ext_workspace_manager_v1_interface, bind_version);
-     }
+  /* i'm okay with some code duplication here */
+  uint32_t bind_version;
+  if (strcmp(iface, wl_compositor_interface.name) == 0)
+    {
+      bind_version = MIN(version, (uint32_t)wl_compositor_interface.version);
+      compositor = wl_registry_bind(registry, name, &wl_compositor_interface, bind_version);
+    }
+  else if (strcmp(iface, wl_shm_interface.name) == 0)
+    {
+      bind_version = MIN(version, (uint32_t)wl_shm_interface.version);
+      shm = wl_registry_bind(registry, name, &wl_shm_interface, bind_version);
+    }
+  else if (strcmp(iface, zwlr_layer_shell_v1_interface.name) == 0)
+    {
+      bind_version = MIN(version, (uint32_t)zwlr_layer_shell_v1_interface.version);
+      layer_shell = wl_registry_bind(registry, name, &zwlr_layer_shell_v1_interface, bind_version);
+    }
+  else if (strcmp(iface, ext_workspace_manager_v1_interface.name) == 0)
+    {
+      bind_version = MIN(version, (uint32_t)ext_workspace_manager_v1_interface.version);
+      workspace_manager = wl_registry_bind(registry, name, &ext_workspace_manager_v1_interface,
+                                           bind_version);
+    }
 }
 
 static void registry_handle_global_remove() {}
 
 static const struct wl_registry_listener registry_listener = {
-     .global        = &registry_handle_global,
-     .global_remove = &registry_handle_global_remove
+  .global        = &registry_handle_global,
+  .global_remove = &registry_handle_global_remove
 };
 
-
-static void workspace_handle_name(void *data,
-                                  struct ext_workspace_handle_v1 *handle,
-                                  const char *name)
+static void
+workspace_handle_name(void *data, struct ext_workspace_handle_v1 *handle,
+                      const char *name)
 {
-     struct workspace *workspace = data;
-     if (workspace->name) {
-          free(workspace->name);
-     }
-     workspace->name = strdup(name);
+  struct workspace *workspace = data;
+  if (workspace->name)
+    {
+      free(workspace->name);
+    }
+  workspace->name = strdup(name);
 }
 
-static void workspace_handle_state(void *data,
-                                   struct ext_workspace_handle_v1 *ext_workspace_handle_v1,
-                                   uint32_t state)
+static void
+workspace_handle_state(void *data, struct ext_workspace_handle_v1 *ext_workspace_handle_v1,
+                       uint32_t state)
 {
-     struct workspace *workspace = data;
-     printf("State changed for %s: %d\n", workspace->name, state);
+  struct workspace *workspace = data;
+  printf("State changed for %s: %d\n", workspace->name, state);
 }
 
 static void workspace_handle_id() {}
@@ -86,30 +88,29 @@ static void workspace_handle_coordinates() {}
 static void workspace_handle_capabilities() {}
 static void workspace_handle_removed() 
 {
-     // TODO: implement remove logic
+  /* TODO: implement remove logic */
 }
 
 static const struct ext_workspace_handle_v1_listener workspace_listener = {
-     .id           = &workspace_handle_id,
-     .name         = &workspace_handle_name,
-     .coordinates  = &workspace_handle_coordinates,
-     .state        = &workspace_handle_state,
-     .capabilities = &workspace_handle_capabilities,
-     .removed      = &workspace_handle_removed,
+  .id           = &workspace_handle_id,
+  .name         = &workspace_handle_name,
+  .coordinates  = &workspace_handle_coordinates,
+  .state        = &workspace_handle_state,
+  .capabilities = &workspace_handle_capabilities,
+  .removed      = &workspace_handle_removed,
 };
 
-static void workspace_manager_handle_workspace(void *data,
-                                               struct ext_workspace_manager_v1 *mgr,
-                                               struct ext_workspace_handle_v1 *handle)
+static void
+workspace_manager_handle_workspace(void *data, struct ext_workspace_manager_v1 *mgr,
+                                   struct ext_workspace_handle_v1 *handle)
 {
-     struct wl_list *workspaces = data;
-     struct workspace *new_workspace = calloc(1, sizeof(struct workspace));
-     new_workspace->handle = handle;
+  struct wl_list *workspaces = data;
+  struct workspace *new_workspace = calloc(1, sizeof(struct workspace));
+  new_workspace->handle = handle;
 
-     ext_workspace_handle_v1_add_listener(handle, &workspace_listener,
-                                          new_workspace);
-     wl_list_insert(workspaces, &new_workspace->node);
-     /* printf("New workspace %p tracked!\n", (void *)wh); */
+  ext_workspace_handle_v1_add_listener(handle, &workspace_listener, new_workspace);
+  wl_list_insert(workspaces, &new_workspace->node);
+  /* printf("New workspace %p tracked!\n", (void *)wh); */
 }
 
 static void workspace_manager_handle_group() {}
@@ -118,47 +119,50 @@ static void workspace_manager_handle_finished() {}
 
 static const struct ext_workspace_manager_v1_listener
 workspace_manager_listener = {
-     .workspace       = &workspace_manager_handle_workspace,
-     .workspace_group = &workspace_manager_handle_group,
-     .done            = &workspace_manager_handle_done,
-     .finished        = &workspace_manager_handle_finished
+  .workspace       = &workspace_manager_handle_workspace,
+  .workspace_group = &workspace_manager_handle_group,
+  .done            = &workspace_manager_handle_done,
+  .finished        = &workspace_manager_handle_finished
 };
 
 int main() {
-     wl_list_init(&workspaces);
+  wl_list_init(&workspaces);
 
-     display = wl_display_connect(NULL);
-     if (!display) {
-          fprintf(stderr, "Couldn't connect to the display.\n");
-          return 1;
-     }
+  display = wl_display_connect(NULL);
+  if (!display)
+    {
+      fprintf(stderr, "Couldn't connect to the display.\n");
+      return 1;
+    }
 
-     registry = wl_display_get_registry(display);
-     if (!registry) {
-          exit_status = 1;
-          fprintf(stderr, "Couldn't get the registry.\n");
-          goto disconnect;
-     }
-     wl_registry_add_listener(registry, &registry_listener, NULL);
-     wl_display_roundtrip(display);
+  registry = wl_display_get_registry(display);
+  if (!registry)
+    {
+      exit_status = 1;
+      fprintf(stderr, "Couldn't get the registry.\n");n
+      goto disconnect;
+    }
+  wl_registry_add_listener(registry, &registry_listener, NULL);
+  wl_display_roundtrip(display);
 
-     if (!workspace_manager) {
-          exit_status = 1;
-          fprintf(stderr, "Workspace manager not supported by the compositor.\n");
-          goto destroy_registry;
-     }
-     ext_workspace_manager_v1_add_listener(
-          workspace_manager, &workspace_manager_listener, &workspaces);
-     wl_display_roundtrip(display);
+  if (!workspace_manager)
+    {
+      exit_status = 1;
+      fprintf(stderr, "Workspace manager not supported by the compositor.\n");
+      goto destroy_registry;
+    }
+  ext_workspace_manager_v1_add_listener(workspace_manager, &workspace_manager_listener,
+                                        &workspaces);
+  wl_display_roundtrip(display);
 
-     while (wl_display_dispatch(display) != -1) {}
+  while (wl_display_dispatch(display) != -1) {}
 
 destroy_registry:
-     wl_registry_destroy(registry);
+  wl_registry_destroy(registry);
 
 disconnect:
-     wl_display_disconnect(display);
+  wl_display_disconnect(display);
 
-     // TODO: free the workspaces list
-     return exit_status;
+  /* TODO: free the workspaces list */
+  return exit_status;
 }
