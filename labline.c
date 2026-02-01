@@ -3,12 +3,17 @@
 #include <stdint.h>
 #include <string.h>
 #include <stdlib.h>
+#include <unistd.h>
+#include <sys/mman.h>
 #include <wayland-client.h>
 #include "wlr-layer-shell-unstable-v1-client-protocol.h"
 #include "ext-workspace-v1-client-protocol.h"
 
 #define MIN(x, y) ((x) < (y) ? (x) : (y))
 #define MAX(x, y) ((x) > (y) ? (x) : (y))
+
+#define PANEL_WIDTH 800
+#define PANEL_HEIGHT 26
 
 static struct wl_display *display;
 static struct wl_registry *registry;
@@ -24,8 +29,35 @@ struct workspace
   struct wl_list node;
 };
 
-struct wl_list workspaces = NULL;
-static int exit_status = 0;
+struct wl_list workspaces;
+
+struct shm_context
+{
+  struct wl_shm_pool *pool;
+  void *data;
+  size_t size;
+};
+
+static int
+create_shm_file(size_t size)
+{
+  char template[] = "/tmp/wayland-shm-XXXXXX";
+  int fd = mkstemp(template);
+  if (fd < 0)
+    {
+      fprintf(stderr, "mkstemp");      
+      return -1;
+    }
+
+  unlink(template);
+  if (ftruncate(fd, size) < 0)
+    {
+      fprintf(stderr, "unlink");
+      return -1;
+    }
+
+  return fd;
+}
 
 static void
 registry_handle_global(void* data, struct wl_registry *wl_registry,
@@ -117,8 +149,7 @@ static void workspace_manager_handle_group() {}
 static void workspace_manager_handle_done() {}
 static void workspace_manager_handle_finished() {}
 
-static const struct ext_workspace_manager_v1_listener
-workspace_manager_listener = {
+static const struct ext_workspace_manager_v1_listener workspace_manager_listener = {
   .workspace       = &workspace_manager_handle_workspace,
   .workspace_group = &workspace_manager_handle_group,
   .done            = &workspace_manager_handle_done,
@@ -126,6 +157,8 @@ workspace_manager_listener = {
 };
 
 int main() {
+  int exit_status = EXIT_SUCCESS;
+
   wl_list_init(&workspaces);
 
   display = wl_display_connect(NULL);
@@ -138,8 +171,8 @@ int main() {
   registry = wl_display_get_registry(display);
   if (!registry)
     {
-      exit_status = 1;
-      fprintf(stderr, "Couldn't get the registry.\n");n
+      exit_status = EXIT_FAILURE;
+      fprintf(stderr, "Couldn't get the registry.\n");
       goto disconnect;
     }
   wl_registry_add_listener(registry, &registry_listener, NULL);
@@ -147,7 +180,7 @@ int main() {
 
   if (!workspace_manager)
     {
-      exit_status = 1;
+      exit_status = EXIT_FAILURE;
       fprintf(stderr, "Workspace manager not supported by the compositor.\n");
       goto destroy_registry;
     }
@@ -155,12 +188,34 @@ int main() {
                                         &workspaces);
   wl_display_roundtrip(display);
 
+  int shm_size = PANEL_WIDTH * PANEL_HEIGHT * 4;
+  int shm_fd = create_shm_file(shm_size);
+  if (shm_fd < 0)
+    {
+      fprintf(stderr, "create_shm_file");
+      exit_status = EXIT_FAILURE;
+      goto destroy_registry;
+    }
+
+  struct shm_context shm_ctx;
+  shm_ctx.pool = wl_shm_create_pool(shm, shm_fd, shm_size);
+  shm_ctx.size = shm_size;
+  shm_ctx.data = mmap(NULL, shm_size, PROT_READ | PROT_WRITE, MAP_SHARED, shm_fd, 0);
+
+  if (shm_ctx.data == MAP_FAILED)
+    {
+      fprintf(stderr, "mmap");
+      goto destroy_pool;
+    }
+
   while (wl_display_dispatch(display) != -1) {}
 
-destroy_registry:
+ destroy_pool:
+  close(shm_fd);
+  wl_shm_pool_destroy(shm_ctx.pool);
+ destroy_registry:
   wl_registry_destroy(registry);
-
-disconnect:
+ disconnect:
   wl_display_disconnect(display);
 
   /* TODO: free the workspaces list */
