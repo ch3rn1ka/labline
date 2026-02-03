@@ -6,11 +6,10 @@
 #include <unistd.h>
 #include <sys/mman.h>
 #include <wayland-client.h>
+#include <cairo/cairo.h>
+#include <pango/pangocairo.h>
 #include "wlr-layer-shell-unstable-v1-client-protocol.h"
 #include "ext-workspace-v1-client-protocol.h"
-
-#define MIN(x, y) ((x) < (y) ? (x) : (y))
-#define MAX(x, y) ((x) > (y) ? (x) : (y))
 
 #define PANEL_WIDTH 800
 #define PANEL_HEIGHT 26
@@ -90,7 +89,8 @@ registry_handle_global(void* data, struct wl_registry *wl_registry,
 
 static void registry_handle_global_remove() {}
 
-static const struct wl_registry_listener registry_listener = {
+static const struct wl_registry_listener
+registry_listener = {
   .global        = &registry_handle_global,
   .global_remove = &registry_handle_global_remove
 };
@@ -115,15 +115,23 @@ workspace_handle_state(void *data, struct ext_workspace_handle_v1 *ext_workspace
   printf("State changed for %s: %d\n", workspace->name, state);
 }
 
-static void workspace_handle_id() {}
-static void workspace_handle_coordinates() {}
-static void workspace_handle_capabilities() {}
-static void workspace_handle_removed() 
+static void
+workspace_handle_id() {}
+
+static void
+workspace_handle_coordinates() {}
+
+static void
+workspace_handle_capabilities() {}
+
+static void
+workspace_handle_removed() 
 {
   /* TODO: implement remove logic */
 }
 
-static const struct ext_workspace_handle_v1_listener workspace_listener = {
+static const struct ext_workspace_handle_v1_listener
+workspace_listener = {
   .id           = &workspace_handle_id,
   .name         = &workspace_handle_name,
   .coordinates  = &workspace_handle_coordinates,
@@ -145,15 +153,41 @@ workspace_manager_handle_workspace(void *data, struct ext_workspace_manager_v1 *
   /* printf("New workspace %p tracked!\n", (void *)wh); */
 }
 
-static void workspace_manager_handle_group() {}
-static void workspace_manager_handle_done() {}
-static void workspace_manager_handle_finished() {}
+static void
+workspace_manager_handle_group() {}
 
-static const struct ext_workspace_manager_v1_listener workspace_manager_listener = {
+static void
+workspace_manager_handle_done() {}
+
+static void
+workspace_manager_handle_finished() {}
+
+static const struct ext_workspace_manager_v1_listener
+workspace_manager_listener = {
   .workspace       = &workspace_manager_handle_workspace,
   .workspace_group = &workspace_manager_handle_group,
   .done            = &workspace_manager_handle_done,
   .finished        = &workspace_manager_handle_finished
+};
+
+static void
+surface_listener_handle_configure(void *data,
+                                  struct zwlr_layer_surface_v1 *layer_surface,
+                                  uint32_t serial, uint32_t width, uint32_t height)
+{
+  zwlr_layer_surface_v1_ack_configure(layer_surface, serial);
+}
+
+static void
+surface_listener_handle_closed(void *data,
+                               struct zwlr_layer_surface_v1 *zwlr_layer_surface_v1)
+{
+
+}
+
+static const struct zwlr_layer_surface_v1_listener surface_listener = {
+  .configure = &surface_listener_handle_configure,
+  .closed    = &surface_listener_handle_closed
 };
 
 int main() {
@@ -187,7 +221,7 @@ int main() {
   ext_workspace_manager_v1_add_listener(workspace_manager, &workspace_manager_listener,
                                         &workspaces);
   wl_display_roundtrip(display);
-
+  
   int shm_size = PANEL_WIDTH * PANEL_HEIGHT * 4;
   int shm_fd = create_shm_file(shm_size);
   if (shm_fd < 0)
@@ -196,19 +230,41 @@ int main() {
       exit_status = EXIT_FAILURE;
       goto destroy_registry;
     }
-
   struct shm_context shm_ctx;
   shm_ctx.pool = wl_shm_create_pool(shm, shm_fd, shm_size);
   shm_ctx.size = shm_size;
   shm_ctx.data = mmap(NULL, shm_size, PROT_READ | PROT_WRITE, MAP_SHARED, shm_fd, 0);
-
   if (shm_ctx.data == MAP_FAILED)
     {
       fprintf(stderr, "mmap");
       goto destroy_pool;
     }
 
-  while (wl_display_dispatch(display) != -1) {}
+  struct wl_buffer *buffer = wl_shm_pool_create_buffer(shm_ctx.pool, 0,
+                                                       PANEL_WIDTH, PANEL_HEIGHT,
+                                                       PANEL_WIDTH * 4,
+                                                       WL_SHM_FORMAT_ARGB8888);
+    
+  struct wl_surface *wl_surface = wl_compositor_create_surface(compositor);
+  struct zwlr_layer_surface_v1 *layer_surface =
+    zwlr_layer_shell_v1_get_layer_surface(layer_shell, wl_surface, NULL,
+                                          ZWLR_LAYER_SHELL_V1_LAYER_TOP,
+                                          "panel");
+  zwlr_layer_surface_v1_set_size(layer_surface, 0, PANEL_HEIGHT);
+  zwlr_layer_surface_v1_set_anchor(layer_surface,
+                                   ZWLR_LAYER_SURFACE_V1_ANCHOR_BOTTOM |
+                                   ZWLR_LAYER_SURFACE_V1_ANCHOR_LEFT |
+                                   ZWLR_LAYER_SURFACE_V1_ANCHOR_RIGHT);
+  zwlr_layer_surface_v1_set_exclusive_zone(layer_surface, PANEL_HEIGHT);
+  zwlr_layer_surface_v1_add_listener(layer_surface, &surface_listener, NULL);
+  wl_surface_commit(wl_surface);
+
+  /* TODO: actually draw the pixels on the surface with cairo */
+  while (wl_display_dispatch(display) != -1) {
+    wl_surface_attach(wl_surface, buffer, 0, 0);
+    wl_surface_damage_buffer(wl_surface, 0, 0, PANEL_WIDTH, PANEL_HEIGHT);
+    wl_surface_commit(wl_surface);
+  }
 
  destroy_pool:
   close(shm_fd);

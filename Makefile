@@ -1,6 +1,7 @@
 CC = gcc
-CFLAGS = -std=c11 -pedantic -Wall -Wextra -g -Iprotocols
-LDFLAGS = -lwayland-client -lm
+CFLAGS = -std=c11 -pedantic -Wall -Wextra -g -Iprotocols -Wno-unused-parameter \
+	$(shell pkg-config --cflags pango cairo pangocairo wayland-client)
+LDFLAGS = $(shell pkg-config --libs pango cairo pangocairo wayland-client)
 
 SOURCES = labline.c \
 	protocols/wlr-layer-shell-unstable-v1-protocol.c \
