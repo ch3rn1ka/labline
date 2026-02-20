@@ -1,14 +1,20 @@
 CC = gcc
-CFLAGS = -std=c11 -pedantic -Wall -Wextra -g -Iprotocols -Wno-unused-parameter \
+CFLAGS = -std=c11 -pedantic -Wall -Wextra -g -Iprotocols -Wno-unused-parameter -D_POSIX_C_SOURCE=200809L \
 	$(shell pkg-config --cflags pango cairo pangocairo wayland-client)
 LDFLAGS = $(shell pkg-config --libs pango cairo pangocairo wayland-client)
 
-SOURCES = labline.c \
+SOURCES = src/main.c \
+	src/wayland.c \
+	src/state.c \
+	src/shm.c \
 	protocols/wlr-layer-shell-unstable-v1-protocol.c \
 	protocols/xdg-shell-protocol.c \
 	protocols/ext-workspace-v1-protocol.c
 
-HEADERS = protocols/wlr-layer-shell-unstable-v1-client-protocol.h \
+HEADERS = src/wayland.h \
+	src/state.h \
+	src/shm.h \
+	protocols/wlr-layer-shell-unstable-v1-client-protocol.h \
 	protocols/xdg-shell-client-protocol.h \
 	protocols/ext-workspace-v1-client-protocol.h
 
