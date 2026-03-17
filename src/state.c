@@ -8,6 +8,8 @@ state_init()
 {
   struct state *state = malloc(sizeof(struct state));
   wl_list_init(&state->workspaces);
+
+  /* TODO: NOT hardcode these values */
   state->width = 1920;
   state->height = 26;
   state->stride = 1920*4;
