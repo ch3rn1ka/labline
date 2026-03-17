@@ -10,6 +10,7 @@
 #include "ext-workspace-v1-client-protocol.h"
 
 #include "state.h"
+#include "render.h"
 #include "shm.h"
 #include "wayland.h"
 
@@ -37,7 +38,7 @@ registry_global(void *data, struct wl_registry *wl_registry,
 {
   struct state *state = data;
 
-  const struct wl_interface *i = NULL; // shorthand for wl_*_interface
+  const struct wl_interface *i = NULL; /* shorthand for wl_*_interface */
   uint32_t bind_version, library_iface_version;
   if (strcmp(iface, wl_compositor_interface.name) == 0)
     {
@@ -167,7 +168,6 @@ layer_surface_configure(void *data,
   zwlr_layer_surface_v1_ack_configure(state->layer_surface, serial);
 
   struct wl_buffer *buffer = create_buffer(state);
-  /* TODO: add listener */
   wl_surface_attach(state->surface, buffer, 0, 0);
   wl_surface_damage_buffer(state->surface, 0, 0, state->width, state->height);
   wl_surface_commit(state->surface);
@@ -183,6 +183,16 @@ layer_surface_closed(void *data,
 static const struct zwlr_layer_surface_v1_listener layer_surface_listener = {
   .configure = &layer_surface_configure,
   .closed    = &layer_surface_closed
+};
+
+void
+wl_buffer_release(void *data, struct wl_buffer *wl_buffer)
+{
+  wl_buffer_destroy(wl_buffer);
+}
+
+static const struct wl_buffer_listener wl_buffer_listener = {
+  .release = wl_buffer_release
 };
 
 void
@@ -246,15 +256,14 @@ create_buffer(struct state *state)
   if (data == MAP_FAILED) return NULL;
 
   struct wl_shm_pool *pool = wl_shm_create_pool(state->shm, fd, size);
-  struct wl_buffer *buffer = wl_shm_pool_create_buffer(pool, 0,
-                                                       state->width,
-                                                       state->height,
-                                                       state->stride,
-                                                       WL_SHM_FORMAT_ARGB8888);
+  struct wl_buffer *buffer =
+    wl_shm_pool_create_buffer(pool, 0, state->width, state->height,
+                              state->stride, WL_SHM_FORMAT_ARGB8888);
   wl_shm_pool_destroy(pool);
   close(fd);
 
-  /* TODO: draw stuff in the buffer */
+  render(data, state);
 
+  wl_buffer_add_listener(buffer, &wl_buffer_listener, NULL);
   return buffer;
 }
