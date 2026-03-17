@@ -7,6 +7,7 @@ SOURCES = src/main.c \
 	src/wayland.c \
 	src/state.c \
 	src/shm.c \
+	src/render.c \
 	protocols/wlr-layer-shell-unstable-v1-protocol.c \
 	protocols/xdg-shell-protocol.c \
 	protocols/ext-workspace-v1-protocol.c
@@ -14,6 +15,7 @@ SOURCES = src/main.c \
 HEADERS = src/wayland.h \
 	src/state.h \
 	src/shm.h \
+	src/render.h \
 	protocols/wlr-layer-shell-unstable-v1-client-protocol.h \
 	protocols/xdg-shell-client-protocol.h \
 	protocols/ext-workspace-v1-client-protocol.h
