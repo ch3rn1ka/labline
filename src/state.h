@@ -19,6 +19,8 @@ struct state
 
   int width, height, stride;
   int anchor;
+
+  char text[1000];
 };
 
 struct state *state_init();
