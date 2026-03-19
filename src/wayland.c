@@ -167,7 +167,7 @@ layer_surface_configure(void *data,
   state->height = height;
   zwlr_layer_surface_v1_ack_configure(state->layer_surface, serial);
 
-  struct wl_buffer *buffer = create_buffer(state);
+  struct wl_buffer *buffer = allocate_wl_buffer(state);
   wl_surface_attach(state->surface, buffer, 0, 0);
   wl_surface_damage_buffer(state->surface, 0, 0, state->width, state->height);
   wl_surface_commit(state->surface);
@@ -246,7 +246,7 @@ wayland_init_globals(struct state *state)
 }
 
 struct wl_buffer *
-create_buffer(struct state *state)
+allocate_wl_buffer(struct state *state)
 {
   int size = state->stride * state->height;
   int fd = create_shm_file(size);
