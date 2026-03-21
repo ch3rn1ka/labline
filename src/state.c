@@ -1,22 +1,19 @@
 #include <stdlib.h>
+#include <wayland-client.h>
 #include <string.h>
 
-#include "wayland.h"
 #include "state.h"
+#include "render.h"
+#include "wayland.h"
 
 struct state *
-state_init()
+init_state()
 {
-  struct state *state = malloc(sizeof(struct state));
-  wl_list_init(&state->workspaces);
+  struct state *state = calloc(1, sizeof(struct state));
 
   /*
    * The width of the surface is left blank until `layer_surface_listener`
-   * catches a configure event from the compositor (it knows the horizontal
-   * dimension of the surface because we anchor it to the sides of the screen).
-   * As for the height, however, it's important to define it here because the
-   * compositor can't deduce it by itself, and we later communicate it in the
-   * `zwlr_layer_surface_v1_set_size()` call.
+   * catches a configure event from the compositor.
    */
   state->width = 0;
   state->stride = 0;
@@ -27,7 +24,9 @@ state_init()
   /* TODO: get text from stdin */
   strcpy(state->text, "Hello, world!");
 
-  wayland_init_globals(state);
+  init_buffers(state);
+  wl_list_init(&state->workspaces);
+  init_wayland_globals(state);
 
   return state;
 }
