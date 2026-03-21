@@ -6,13 +6,13 @@
 #include <sys/mman.h>
 #include <wayland-client.h>
 
+#include "wayland.h"
+#include "render.h"
+#include "state.h"
+#include "shm.h"
+
 #include "wlr-layer-shell-unstable-v1-client-protocol.h"
 #include "ext-workspace-v1-client-protocol.h"
-
-#include "state.h"
-#include "render.h"
-#include "shm.h"
-#include "wayland.h"
 
 #ifndef MIN
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
@@ -25,12 +25,7 @@ struct workspace
   struct wl_list node;
 };
 
-/*
- * Get a list of globals and bind them to the fields of the `state` struct.
- *
- * Note: in Wayland, "name" is just a numeric id of an interface,
- * so I had to follow the convention. The actual name is stored in `iface`.
- */
+/* Get a list of globals and bind them to the fields of the `state` struct. */
 static void
 registry_global(void *data, struct wl_registry *wl_registry,
                 uint32_t name, const char *iface,
@@ -81,18 +76,17 @@ static const struct wl_registry_listener registry_listener = {
 
 static void
 workspace_handle_name(void *data, struct ext_workspace_handle_v1 *handle,
-                     const char *name)
+                      const char *name)
 {
   struct workspace *workspace = data;
-  if (workspace->name)
-    free(workspace->name);
+  if (workspace->name) free(workspace->name);
   workspace->name = strdup(name);
 }
 
 static void
 workspace_handle_state(void *data,
-                struct ext_workspace_handle_v1 *ext_workspace_handle_v1,
-                uint32_t state)
+                       struct ext_workspace_handle_v1 *ext_workspace_handle_v1,
+                       uint32_t state)
 {
   struct workspace *workspace = data;
   printf("State changed for %s: %d\n", workspace->name, state);
@@ -155,6 +149,17 @@ workspace_manager_listener = {
   .finished        = &workspace_manager_finished
 };
 
+static void buffer_release(void *data, struct wl_buffer *buf)
+{
+  struct buffer_context *buf_ctx = data;
+  buf_ctx->busy = false;
+}
+
+static const struct wl_buffer_listener buffer_listener = {
+  .release = &buffer_release
+};
+
+/* Main buffer realloc logic here. */
 static void
 layer_surface_configure(void *data,
                         struct zwlr_layer_surface_v1 *layer_surface,
@@ -162,15 +167,36 @@ layer_surface_configure(void *data,
                         uint32_t height)
 {
   struct state *state = data;
-  state->width = width;
-  state->stride = width * 4;
-  state->height = height;
-  zwlr_layer_surface_v1_ack_configure(state->layer_surface, serial);
 
-  struct wl_buffer *buffer = allocate_wl_buffer(state);
-  wl_surface_attach(state->surface, buffer, 0, 0);
-  wl_surface_damage_buffer(state->surface, 0, 0, state->width, state->height);
-  wl_surface_commit(state->surface);
+  if (width != state->width || height != state->height)
+    {
+      state->width = width;
+      state->stride = width * 4;
+      state->height = height;
+
+      state->buffers[0]->stale = true;
+      state->buffers[1]->stale = true;
+    }
+  zwlr_layer_surface_v1_ack_configure(layer_surface, serial);
+
+  for (int i = 0; i < 2; ++i)
+    {
+      struct buffer_context *buf_ctx = state->buffers[i];
+
+      /* Redraw only if found a free buffer (of which there are two). */
+      if (!buf_ctx->busy)
+        {
+          prepare_buffer(buf_ctx, state);
+          wl_buffer_add_listener(buf_ctx->buf, &buffer_listener, buf_ctx);
+          render(buf_ctx, state);
+          wl_surface_attach(state->surface, buf_ctx->buf, 0, 0);
+          wl_surface_damage_buffer(state->surface, 0, 0,
+                                   state->width, state->height);
+          wl_surface_commit(state->surface);
+          buf_ctx->busy = true;
+          break;
+        }
+    }
 }
 
 static void
@@ -185,18 +211,9 @@ static const struct zwlr_layer_surface_v1_listener layer_surface_listener = {
   .closed    = &layer_surface_closed
 };
 
-void
-wl_buffer_release(void *data, struct wl_buffer *wl_buffer)
-{
-  wl_buffer_destroy(wl_buffer);
-}
-
-static const struct wl_buffer_listener wl_buffer_listener = {
-  .release = wl_buffer_release
-};
 
 void
-wayland_init_globals(struct state *state)
+init_wayland_globals(struct state *state)
 {
   state->display = wl_display_connect(NULL);
   if (!state->display)
@@ -225,12 +242,12 @@ wayland_init_globals(struct state *state)
   wl_display_roundtrip(state->display);
 
   state->surface = wl_compositor_create_surface(state->compositor);
-  state->layer_surface = zwlr_layer_shell_v1_get_layer_surface(
-          state->layer_shell,
-          state->surface,
-          NULL, // wl_output
-          ZWLR_LAYER_SHELL_V1_LAYER_TOP,
-          "labline");
+  state->layer_surface =
+    zwlr_layer_shell_v1_get_layer_surface(state->layer_shell,
+                                          state->surface,
+                                          NULL, // wl_output
+                                          ZWLR_LAYER_SHELL_V1_LAYER_TOP,
+                                          "labline");
   zwlr_layer_surface_v1_set_size(state->layer_surface, 0, state->height);
   zwlr_layer_surface_v1_set_anchor(state->layer_surface,
                                    ZWLR_LAYER_SURFACE_V1_ANCHOR_BOTTOM |
@@ -242,28 +259,6 @@ wayland_init_globals(struct state *state)
                                      &layer_surface_listener, state);
 
   wl_surface_commit(state->surface);
+  wl_display_flush(state->display);
   wl_display_roundtrip(state->display);
-}
-
-struct wl_buffer *
-allocate_wl_buffer(struct state *state)
-{
-  int size = state->stride * state->height;
-  int fd = create_shm_file(size);
-  if (fd < 0) return NULL;
-
-  void* data = mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
-  if (data == MAP_FAILED) return NULL;
-
-  struct wl_shm_pool *pool = wl_shm_create_pool(state->shm, fd, size);
-  struct wl_buffer *buffer =
-    wl_shm_pool_create_buffer(pool, 0, state->width, state->height,
-                              state->stride, WL_SHM_FORMAT_ARGB8888);
-  wl_shm_pool_destroy(pool);
-  close(fd);
-
-  render(data, state);
-
-  wl_buffer_add_listener(buffer, &wl_buffer_listener, NULL);
-  return buffer;
 }
