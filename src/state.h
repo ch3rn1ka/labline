@@ -1,7 +1,6 @@
 #ifndef STATE_H
 #define STATE_H
 
-#include <stdio.h>
 #include <wayland-client.h>
 
 struct state
@@ -17,12 +16,17 @@ struct state
 
   struct wl_list workspaces;
 
-  int width, height, stride;
+  /* Use double buffering to avoid reallocating on each configure event */
+  struct buffer_context *buffers[2];
+
+  uint32_t width, height;
+  int stride;
+
   int anchor;
 
   char text[1000];
 };
 
-struct state *state_init();
+struct state *init_state();
 
 #endif
