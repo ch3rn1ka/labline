@@ -1,10 +1,10 @@
 #ifndef RENDER_H
 #define RENDER_H
 
+#include <cairo/cairo.h>
+#include <pango/pangocairo.h>
 #include <stdbool.h>
 #include <unistd.h>
-#include <pango/pangocairo.h>
-#include <cairo/cairo.h>
 #include <wayland-client.h>
 
 #include "state.h"
