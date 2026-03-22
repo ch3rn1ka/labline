@@ -1,6 +1,6 @@
 #include <stdlib.h>
-#include <wayland-client.h>
 #include <string.h>
+#include <wayland-client.h>
 
 #include "state.h"
 #include "render.h"

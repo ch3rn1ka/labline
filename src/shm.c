@@ -1,6 +1,6 @@
-#include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 
 int
 create_shm_file(size_t size)
