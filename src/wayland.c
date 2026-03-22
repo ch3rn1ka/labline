@@ -2,21 +2,17 @@
 #include <stdint.h>
 #include <string.h>
 #include <stdlib.h>
-#include <unistd.h>
 #include <sys/mman.h>
+#include <unistd.h>
 #include <wayland-client.h>
 
 #include "wayland.h"
 #include "render.h"
-#include "state.h"
 #include "shm.h"
+#include "state.h"
 
-#include "wlr-layer-shell-unstable-v1-client-protocol.h"
 #include "ext-workspace-v1-client-protocol.h"
-
-#ifndef MIN
-#define MIN(a, b) ((a) < (b) ? (a) : (b))
-#endif
+#include "wlr-layer-shell-unstable-v1-client-protocol.h"
 
 struct workspace
 {
@@ -25,7 +21,6 @@ struct workspace
   struct wl_list node;
 };
 
-/* Get a list of globals and bind them to the fields of the `state` struct. */
 static void
 registry_global(void *data, struct wl_registry *wl_registry,
                 uint32_t name, const char *iface,
@@ -89,6 +84,8 @@ workspace_handle_state(void *data,
                        uint32_t state)
 {
   struct workspace *workspace = data;
+
+  /* TODO: mark workspace with `state`=1 as current */
   printf("State changed for %s: %d\n", workspace->name, state);
 }
 
@@ -129,9 +126,12 @@ workspace_manager_workspace(void *data,
   ext_workspace_handle_v1_add_listener(handle, &workspace_handle_listener,
                                        new_workspace);
   wl_list_insert(&state->workspaces, &new_workspace->node);
-  /* printf("Workspace %p tracked!\n", (void *)wh); */
 }
 
+/*
+ * We don't need to track workspace groups since there's only one in Labwc.
+ * Will probably need to do it anyway for compatibility with other compositors.
+ */
 static void
 workspace_manager_group() {}
 
