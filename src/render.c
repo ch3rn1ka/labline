@@ -22,7 +22,6 @@ static const struct wl_buffer_listener buffer_listener = {
  * Realloc all fields of the `buffer_context` struct. Called during
  * configure events to match the buffer dimensions to the new surface size
  * so that `render()` could be safely called after.
- *
  */
 static void
 buffer_realloc(struct buffer_context *buf_ctx, struct state *state)
