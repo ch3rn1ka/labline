@@ -149,16 +149,6 @@ workspace_manager_listener = {
   .finished        = &workspace_manager_finished
 };
 
-static void buffer_release(void *data, struct wl_buffer *buf)
-{
-  struct buffer_context *buf_ctx = data;
-  buf_ctx->busy = false;
-}
-
-static const struct wl_buffer_listener buffer_listener = {
-  .release = &buffer_release
-};
-
 /* Main buffer realloc logic here. */
 static void
 layer_surface_configure(void *data,
@@ -179,24 +169,7 @@ layer_surface_configure(void *data,
     }
   zwlr_layer_surface_v1_ack_configure(layer_surface, serial);
 
-  for (int i = 0; i < 2; ++i)
-    {
-      struct buffer_context *buf_ctx = state->buffers[i];
-
-      /* Redraw only if found a free buffer (of which there are two). */
-      if (!buf_ctx->busy)
-        {
-          prepare_buffer(buf_ctx, state);
-          wl_buffer_add_listener(buf_ctx->buf, &buffer_listener, buf_ctx);
-          render(buf_ctx, state);
-          wl_surface_attach(state->surface, buf_ctx->buf, 0, 0);
-          wl_surface_damage_buffer(state->surface, 0, 0,
-                                   state->width, state->height);
-          wl_surface_commit(state->surface);
-          buf_ctx->busy = true;
-          break;
-        }
-    }
+  render(state);
 }
 
 static void

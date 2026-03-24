@@ -1,14 +1,25 @@
-#include <sys/mman.h>
-#include <pango/pangocairo.h>
 #include <cairo/cairo.h>
+#include <pango/pangocairo.h>
+#include <sys/mman.h>
+#include <wayland-client.h>
 
 #include "render.h"
 #include "state.h"
 #include "shm.h"
 
+static void buffer_release(void *data, struct wl_buffer *buf)
+{
+  struct buffer_context *buf_ctx = data;
+  buf_ctx->busy = false;
+}
+
+static const struct wl_buffer_listener buffer_listener = {
+  .release = &buffer_release
+};
+
 /*
- * Allocate two buffers and mark them as stale so that the fields of the
- * structs will get allocated during the next `prepare_buffer()` call.
+ * Allocate two `buffer_context` structs and mark them as stale so that their
+ * fields will get allocated during the next `prepare_buffer()` call.
  */
 void
 init_buffers(struct state *state)
@@ -25,10 +36,14 @@ init_buffers(struct state *state)
  * configure events to match the buffer dimensions to the new surface size
  * so that `render()` could be safely called after.
  */
-void
-prepare_buffer(struct buffer_context *buf_ctx, struct state *state)
+bool
+realloc_buffer(struct buffer_context *buf_ctx, struct state *state)
 {
-  if (!buf_ctx->stale) return;
+  if (!buf_ctx->stale)
+    {
+      printf("%s", "The buffer is not stale. No need to realloc.\n");
+      return false;
+    }
 
   if (buf_ctx->pango_layout) g_object_unref(buf_ctx->pango_layout);
   if (buf_ctx->pango_font_desc)
@@ -72,11 +87,13 @@ prepare_buffer(struct buffer_context *buf_ctx, struct state *state)
   buf_ctx->fd = fd;
   buf_ctx->stale = false;
   buf_ctx->busy = false;
+
+  return true;
 }
 
 /* Draw the contents of the statusline with pango and cairo. */
 void
-render(struct buffer_context *buf_ctx, struct state *state)
+redraw_buffer(struct buffer_context *buf_ctx, struct state *state)
 {
   cairo_set_source_rgb(buf_ctx->cairo_ctx, 0.0, 0.0, 0.0);
   cairo_paint_with_alpha(buf_ctx->cairo_ctx, 1.0);
@@ -91,4 +108,30 @@ render(struct buffer_context *buf_ctx, struct state *state)
   cairo_move_to(buf_ctx->cairo_ctx, 0, y_offset);
   pango_cairo_show_layout(buf_ctx->cairo_ctx, buf_ctx->pango_layout);
   cairo_surface_flush(buf_ctx->cairo_surface);
+}
+
+/* Draw the contents of the statusline with pango and cairo. */
+void
+render(struct state *state)
+{
+  for (int i = 0; i < 2; ++i)
+    {
+      struct buffer_context *buf_ctx = state->buffers[i];
+
+      if (!buf_ctx->busy)
+        {
+          if (realloc_buffer(buf_ctx, state))
+            {
+              /* New `wl_buffer` just got allocated */
+              wl_buffer_add_listener(buf_ctx->buf, &buffer_listener, buf_ctx);
+            }
+          redraw_buffer(buf_ctx, state);
+          wl_surface_attach(state->surface, buf_ctx->buf, 0, 0);
+          wl_surface_damage_buffer(state->surface, 0, 0,
+                                   state->width, state->height);
+          wl_surface_commit(state->surface);
+          buf_ctx->busy = true;
+          break;
+        }
+    }
 }
