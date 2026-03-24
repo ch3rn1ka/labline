@@ -7,6 +7,6 @@
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
 #endif
 
-void init_wayland_globals(struct state *state);
+void wayland_init(struct state *state);
 
 #endif
