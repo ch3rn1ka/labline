@@ -9,25 +9,22 @@
 
 #include "state.h"
 
-struct buffer_context
-{
-  void *map;
-  size_t map_size;
-  int fd;
+struct buffer_context {
+	void *map;
+	size_t map_size;
+	int fd;
 
-  struct wl_buffer *buf;
-  cairo_surface_t *cairo_surface;
-  cairo_t *cairo_ctx;
-  PangoLayout *pango_layout;
-  PangoFontDescription *pango_font_desc;
+	struct wl_buffer *buf;
+	cairo_surface_t *cairo_surface;
+	cairo_t *cairo_ctx;
+	PangoLayout *pango_layout;
+	PangoFontDescription *pango_font_desc;
 
-  bool stale;
-  bool busy;
+	bool stale;
+	bool busy;
 };
 
-void init_buffers(struct state *state);
-bool realloc_buffer(struct buffer_context *buf_ctx, struct state *state);
-void redraw_buffer(struct buffer_context *buf_ctx, struct state *state);
+void buffer_redraw(struct buffer_context *buf_ctx, struct state *state);
 void render(struct state *state);
 
 #endif

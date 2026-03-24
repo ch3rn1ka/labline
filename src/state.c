@@ -6,23 +6,37 @@
 #include "render.h"
 #include "wayland.h"
 
-struct state *
-init_state()
+/*
+ * Allocate two `buffer_context` structs and mark them as stale so that their
+ * fields will get allocated during the next `prepare_buffer()` call.
+ */
+static void
+buffers_init(struct state *state)
 {
-  struct state *state = calloc(1, sizeof(struct state));
+	for (int i = 0; i < 2; i++) {
+		state->buffers[i] = calloc(1, sizeof(struct buffer_context));
+		state->buffers[i]->fd = -1;
+		state->buffers[i]->stale = true;
+	}
+}
 
-  /*
-   * The width of the surface is left blank until `layer_surface_listener`
-   * catches a configure event from the compositor.
-   */
-  state->width = 0;
-  state->stride = 0;
+struct state *
+state_init()
+{
+	struct state *state = calloc(1, sizeof(struct state));
 
-  /* TODO: get height from the fontsize */
-  state->height = 26;
+	/*
+	 * The width of the surface is left blank until `layer_surface_listener`
+	 * catches a configure event from the compositor.
+	 */
+	state->width = 0;
+	state->stride = 0;
 
-  wl_list_init(&state->workspaces);
-  init_buffers(state);
-  init_wayland_globals(state);
-  return state;
+	/* TODO: get height from the fontsize */
+	state->height = 26;
+
+	wl_list_init(&state->workspaces);
+	buffers_init(state);
+	wayland_init(state);
+	return state;
 }
