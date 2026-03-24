@@ -27,6 +27,6 @@ struct state
   int anchor;
 };
 
-struct state *init_state();
+struct state *state_init();
 
 #endif
