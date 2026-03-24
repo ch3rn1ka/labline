@@ -21,12 +21,8 @@ init_state()
   /* TODO: get height from the fontsize */
   state->height = 26;
 
-  /* TODO: get text from stdin */
-  strcpy(state->text, "Hello, world!");
-
-  init_buffers(state);
   wl_list_init(&state->workspaces);
+  init_buffers(state);
   init_wayland_globals(state);
-
   return state;
 }
