@@ -60,11 +60,8 @@ buffer_realloc(struct buffer_context *buf_ctx, struct state *state)
 
 	struct wl_shm_pool *pool = wl_shm_create_pool(state->shm, fd,
 		buf_ctx->map_size);
-	buf_ctx->buf = wl_shm_pool_create_buffer(pool, 0,
-		state->width,
-		state->height,
-		state->stride,
-		WL_SHM_FORMAT_ARGB8888);
+	buf_ctx->buf = wl_shm_pool_create_buffer(pool, 0, state->width,
+		state->height, state->stride, WL_SHM_FORMAT_ARGB8888);
 	wl_shm_pool_destroy(pool);
 
 	buf_ctx->cairo_surface =
