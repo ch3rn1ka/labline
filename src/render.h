@@ -26,7 +26,8 @@ struct buffer_context
 };
 
 void init_buffers(struct state *state);
-void prepare_buffer(struct buffer_context *buf_ctx, struct state *state);
-void render(struct buffer_context *buf_ctx, struct state *state);
+bool realloc_buffer(struct buffer_context *buf_ctx, struct state *state);
+void redraw_buffer(struct buffer_context *buf_ctx, struct state *state);
+void render(struct state *state);
 
 #endif

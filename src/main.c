@@ -50,26 +50,7 @@ int main()
                 {
                   state->text[length - 1] = '\0';
                 }
-
-              /*
-               * TODO: separate the logic for finding a free buffer
-               * into its own function (it repeats in wayland.c)
-               */
-              for (int i = 0; i < 2; ++i)
-                {
-                  struct buffer_context *buf_ctx = state->buffers[i];
-                  if (!buf_ctx->busy)
-                    {
-                      prepare_buffer(buf_ctx, state);
-                      render(buf_ctx, state);
-                      wl_surface_attach(state->surface, buf_ctx->buf, 0, 0);
-                      wl_surface_damage_buffer(state->surface, 0, 0,
-                                               state->width, state->height);
-                      wl_surface_commit(state->surface);
-                      buf_ctx->busy = true;
-                      break;
-                    }
-                }
+              render(state);
             }
         }
     }
