@@ -1,6 +1,7 @@
 #ifndef STATE_H
 #define STATE_H
 
+#include <stdio.h>
 #include <wayland-client.h>
 
 struct state
@@ -18,13 +19,12 @@ struct state
 
   /* Use double buffering to avoid reallocating on each configure event */
   struct buffer_context *buffers[2];
+  char text[BUFSIZ];
 
   uint32_t width, height;
   int stride;
 
   int anchor;
-
-  char text[1000];
 };
 
 struct state *init_state();

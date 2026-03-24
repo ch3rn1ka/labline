@@ -62,7 +62,7 @@ prepare_buffer(struct buffer_context *buf_ctx, struct state *state)
                                         state->height, state->stride);
   buf_ctx->cairo_ctx = cairo_create(buf_ctx->cairo_surface);
   buf_ctx->pango_layout = pango_cairo_create_layout(buf_ctx->cairo_ctx);
-  buf_ctx->pango_font_desc = pango_font_description_from_string("Monospace");
+  buf_ctx->pango_font_desc = pango_font_description_from_string("Monospace 10");
 
   pango_layout_set_font_description(buf_ctx->pango_layout,
                                     buf_ctx->pango_font_desc);
