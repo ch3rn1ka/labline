@@ -19,7 +19,7 @@ struct state
 
   /* Use double buffering to avoid reallocating on each configure event */
   struct buffer_context *buffers[2];
-  char text[BUFSIZ];
+  char statusline[BUFSIZ];
 
   uint32_t width, height;
   int stride;

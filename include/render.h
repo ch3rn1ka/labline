@@ -24,7 +24,7 @@ struct buffer_context {
 	bool busy;
 };
 
-void buffer_redraw(struct buffer_context *buf_ctx, struct state *state);
+void buffer_draw(struct buffer_context *buf_ctx, struct state *state);
 void render(struct state *state);
 
 #endif

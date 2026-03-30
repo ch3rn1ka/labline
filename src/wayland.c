@@ -14,12 +14,6 @@
 #include "ext-workspace-v1-client-protocol.h"
 #include "wlr-layer-shell-unstable-v1-client-protocol.h"
 
-struct workspace {
-	struct ext_workspace_handle_v1 *handle;
-	char *name;
-	struct wl_list node;
-};
-
 static void
 registry_global(void *data, struct wl_registry *wl_registry,
 		uint32_t name, const char *iface, uint32_t server_iface_version)
@@ -81,10 +75,9 @@ workspace_handle_state(void *data,
 		struct ext_workspace_handle_v1 *ext_workspace_handle_v1,
 		uint32_t state)
 {
-	struct workspace *workspace = data;
-
-	/* TODO: mark workspace with state=1 as current */
-	printf("State changed for %s: %d\n", workspace->name, state);
+	struct workspace *ws = data;
+	ws->state = state;
+	/* TODO: RERENDER! */
 }
 
 static void
@@ -120,9 +113,9 @@ workspace_manager_workspace(void *data, struct ext_workspace_manager_v1 *mgr,
 	struct workspace *new_workspace = calloc(1, sizeof(struct workspace));
 	new_workspace->handle = handle;
 
+	wl_list_insert(&state->workspaces, &new_workspace->node);
 	ext_workspace_handle_v1_add_listener(handle,
 		&workspace_handle_listener, new_workspace);
-	wl_list_insert(&state->workspaces, &new_workspace->node);
 }
 
 /*
