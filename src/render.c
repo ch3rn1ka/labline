@@ -1,11 +1,14 @@
 #include <cairo/cairo.h>
 #include <pango/pangocairo.h>
+#include <stdio.h>
 #include <sys/mman.h>
+#include <wayland-util.h>
 #include <wayland-client.h>
 
 #include "render.h"
 #include "state.h"
 #include "shm.h"
+#include "wayland.h"
 
 static void
 buffer_release(void *data, struct wl_buffer *buf)
@@ -76,30 +79,61 @@ buffer_realloc(struct buffer_context *buf_ctx, struct state *state)
 	pango_layout_set_font_description(buf_ctx->pango_layout,
 		buf_ctx->pango_font_desc);
 	pango_layout_set_width(buf_ctx->pango_layout, state->width * PANGO_SCALE);
-	pango_layout_set_alignment(buf_ctx->pango_layout, PANGO_ALIGN_RIGHT);
 
 	buf_ctx->fd = fd;
 	buf_ctx->stale = false;
 	buf_ctx->busy = false;
 }
 
+static void
+buffer_draw_workspaces(struct buffer_context *buf_ctx, struct state *state)
+{
+	double x_offset = 0;
+	struct workspace *ws;
+	wl_list_for_each_reverse(ws, &state->workspaces, node) {
+		if (ws->state == 1) {
+			cairo_set_source_rgb(buf_ctx->cairo_ctx, 1.0, 0, 1.0);
+		} else {
+			cairo_set_source_rgb(buf_ctx->cairo_ctx, 1.0, 0.949, 0);
+		}
+		cairo_rectangle(buf_ctx->cairo_ctx, x_offset, 0, state->height * 0.75, state->height);
+		x_offset += state->height * 0.75;
+		cairo_fill(buf_ctx->cairo_ctx);
+	}
+}
+
+static void
+buffer_draw_windows(struct buffer_context *buf_ctx, struct state *state)
+{
+
+}
+
+static void
+buffer_draw_status(struct buffer_context *buf_ctx, struct state *state)
+{
+	pango_layout_set_text(buf_ctx->pango_layout, state->statusline, -1);
+
+	int text_width, text_height;
+	pango_layout_get_pixel_size(buf_ctx->pango_layout, &text_width,
+		&text_height);
+
+	double x_offset = state->width - text_width;
+	double y_offset = (state->height - text_height) / 2.0;
+	cairo_set_source_rgb(buf_ctx->cairo_ctx, 1.0, 1.0, 1.0);
+	cairo_move_to(buf_ctx->cairo_ctx, x_offset, y_offset);
+	pango_cairo_show_layout(buf_ctx->cairo_ctx, buf_ctx->pango_layout);
+}
+
 /* Draw the contents of the statusline with pango and cairo. */
 void
-buffer_redraw(struct buffer_context *buf_ctx, struct state *state)
+buffer_draw(struct buffer_context *buf_ctx, struct state *state)
 {
 	cairo_set_source_rgb(buf_ctx->cairo_ctx, 0.0, 0.0, 0.0);
 	cairo_paint_with_alpha(buf_ctx->cairo_ctx, 1.0);
 
-	pango_layout_set_text(buf_ctx->pango_layout, state->text, -1);
-
-	int text_width, text_height;
-	pango_layout_get_pixel_size(buf_ctx->pango_layout,
-		&text_width, &text_height);
-
-	double y_offset = (state->height - text_height) / 2.0;
-	cairo_set_source_rgb(buf_ctx->cairo_ctx, 1.0, 1.0, 1.0);
-	cairo_move_to(buf_ctx->cairo_ctx, 0, y_offset);
-	pango_cairo_show_layout(buf_ctx->cairo_ctx, buf_ctx->pango_layout);
+	buffer_draw_workspaces(buf_ctx, state);
+	buffer_draw_windows(buf_ctx, state);
+	buffer_draw_status(buf_ctx, state);
 	cairo_surface_flush(buf_ctx->cairo_surface);
 }
 
@@ -111,14 +145,13 @@ render(struct state *state)
 	{
 		struct buffer_context *buf_ctx = state->buffers[i];
 
-		if (!buf_ctx->busy)
-		{
+		if (!buf_ctx->busy) {
 			if (buf_ctx->stale) {
 				buffer_realloc(buf_ctx, state);
 				wl_buffer_add_listener(buf_ctx->buf,
 					&buffer_listener, buf_ctx);
 			}
-			buffer_redraw(buf_ctx, state);
+			buffer_draw(buf_ctx, state);
 			wl_surface_attach(state->surface, buf_ctx->buf, 0, 0);
 			wl_surface_damage_buffer(state->surface, 0, 0,
 				state->width, state->height);

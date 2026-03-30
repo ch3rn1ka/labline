@@ -32,15 +32,16 @@ main(int argc, char **argv)
 
 		if (fds[1].revents & POLLIN) {
 			wl_display_read_events(state->display);
+			/* wl_display_dispatch_pending(state->display); */
 		} else {
 			wl_display_cancel_read(state->display);
 		}
 
 		if (fds[0].revents & POLLIN) {
-			if (fgets(state->text, BUFSIZ, stdin)) {
-				int length = strlen(state->text);
-				if (state->text[length - 1] == '\n') {
-					state->text[length - 1] = '\0';
+			if (fgets(state->statusline, BUFSIZ, stdin)) {
+				int length = strlen(state->statusline);
+				if (state->statusline[length - 1] == '\n') {
+					state->statusline[length - 1] = '\0';
 				}
 				render(state);
 			}
