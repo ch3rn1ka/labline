@@ -63,7 +63,9 @@ static void
 workspace_handle_name(void *data, struct ext_workspace_handle_v1 *handle,
 		const char *name)
 {
-	struct workspace *workspace = data;
+	struct workspace_callback_data *callback_data = data;
+	struct workspace *workspace = callback_data->workspace;
+
 	if (workspace->name) {
 		free(workspace->name);
 	}
@@ -75,9 +77,15 @@ workspace_handle_state(void *data,
 		struct ext_workspace_handle_v1 *ext_workspace_handle_v1,
 		uint32_t state)
 {
-	struct workspace *ws = data;
-	ws->state = state;
-	/* TODO: RERENDER! */
+	struct workspace_callback_data *callback_data = data;
+	struct workspace *workspace = callback_data->workspace;
+	struct state *program_state = callback_data->state;
+	workspace->state = state;
+
+	/* Trigger a re-render if the surface is initialized. */
+	if (program_state->width != 0) {
+		render(program_state);
+	}
 }
 
 static void
@@ -112,10 +120,14 @@ workspace_manager_workspace(void *data, struct ext_workspace_manager_v1 *mgr,
 	struct state *state = data;
 	struct workspace *new_workspace = calloc(1, sizeof(struct workspace));
 	new_workspace->handle = handle;
-
 	wl_list_insert(&state->workspaces, &new_workspace->node);
+
+	struct workspace_callback_data *callback_data =
+		calloc(1, sizeof(struct workspace_callback_data));
+	callback_data->workspace = new_workspace;
+	callback_data->state = state;
 	ext_workspace_handle_v1_add_listener(handle,
-		&workspace_handle_listener, new_workspace);
+		&workspace_handle_listener, callback_data);
 }
 
 /*
@@ -162,7 +174,7 @@ layer_surface_configure(void *data, struct zwlr_layer_surface_v1 *layer_surface,
 static void
 layer_surface_closed(void *data, struct zwlr_layer_surface_v1 *layer_surface)
 {
-  /* TODO: write close logic */
+	/* TODO: deallocate stuff */
 }
 
 static const struct zwlr_layer_surface_v1_listener layer_surface_listener = {
@@ -174,6 +186,7 @@ static const struct zwlr_layer_surface_v1_listener layer_surface_listener = {
 void
 wayland_init(struct state *state)
 {
+	/* Display */
 	state->display = wl_display_connect(NULL);
 	if (!state->display)
 	{
@@ -181,6 +194,7 @@ wayland_init(struct state *state)
 		exit(EXIT_FAILURE);
 	}
 
+	/* Registry */
 	state->registry = wl_display_get_registry(state->display);
 	if (!state->registry)
 	{
@@ -190,16 +204,7 @@ wayland_init(struct state *state)
 	wl_registry_add_listener(state->registry, &registry_listener, state);
 	wl_display_roundtrip(state->display);
 
-	if (!state->workspace_manager)
-	{
-		fprintf(stderr,
-			"Workspace manager not supported by the compositor.\n");
-		exit(EXIT_FAILURE);
-	}
-	ext_workspace_manager_v1_add_listener(state->workspace_manager,
-		&workspace_manager_listener, state);
-	wl_display_roundtrip(state->display);
-
+	/* Layer surface */
 	state->surface = wl_compositor_create_surface(state->compositor);
 	state->layer_surface =
 		zwlr_layer_shell_v1_get_layer_surface(state->layer_shell,
@@ -214,6 +219,16 @@ wayland_init(struct state *state)
 		state->height);
 	zwlr_layer_surface_v1_add_listener(state->layer_surface,
 		&layer_surface_listener, state);
+
+	/* Workspace manager */
+	if (!state->workspace_manager) {
+		fprintf(stderr,
+			"Workspace manager not supported by the compositor.\n");
+		exit(EXIT_FAILURE);
+	}
+	ext_workspace_manager_v1_add_listener(state->workspace_manager,
+		&workspace_manager_listener, state);
+	wl_display_roundtrip(state->display);
 
 	wl_surface_commit(state->surface);
 	wl_display_flush(state->display);
