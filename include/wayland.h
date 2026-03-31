@@ -14,6 +14,11 @@ struct workspace {
 	struct wl_list node;
 };
 
+struct workspace_callback_data {
+	struct state *state;
+	struct workspace *workspace;
+};
+
 void wayland_init(struct state *state);
 
 #endif
