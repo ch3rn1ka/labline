@@ -88,7 +88,7 @@ buffer_realloc(struct buffer_context *buf_ctx, struct state *state)
 static void
 buffer_draw_workspaces(struct buffer_context *buf_ctx, struct state *state)
 {
-	double x_offset = 0;
+	int x_offset = 0;
 	struct workspace *ws;
 	wl_list_for_each_reverse(ws, &state->workspaces, node) {
 		if (ws->state == 1) {
