@@ -102,17 +102,20 @@ buffer_draw_workspaces(struct buffer_context *buf_ctx, struct state *state)
 		pango_layout_set_text(buf_ctx->pango_layout, ws->name, -1);
 		pango_layout_get_pixel_size(buf_ctx->pango_layout,
 			&ws_name_width, &ws_name_height);
+
+		int box_width = ws_name_width + 8;
+
 		cairo_rectangle(buf_ctx->cairo_ctx, x_offset, 0,
-			ws_name_width * 2, state->height);
+			box_width, state->height);
 		cairo_fill(buf_ctx->cairo_ctx);
 
 		cairo_set_source_rgb(buf_ctx->cairo_ctx, 0, 0, 0);
-		cairo_move_to(buf_ctx->cairo_ctx, x_offset + (ws_name_width / 2.0),
+		cairo_move_to(buf_ctx->cairo_ctx, x_offset + 4,
 			(state->height - ws_name_height) / 2.0);
 		pango_cairo_show_layout(buf_ctx->cairo_ctx,
 			buf_ctx->pango_layout);
 
-		x_offset += ws_name_width * 2;
+		x_offset += box_width;
 	}
 	pango_layout_set_width(buf_ctx->pango_layout,
 		state->width * PANGO_SCALE);
