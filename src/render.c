@@ -88,18 +88,34 @@ buffer_realloc(struct buffer_context *buf_ctx, struct state *state)
 static void
 buffer_draw_workspaces(struct buffer_context *buf_ctx, struct state *state)
 {
-	int x_offset = 0;
+	pango_layout_set_width(buf_ctx->pango_layout, -1);
 	struct workspace *ws;
+	int ws_name_width, ws_name_height;
+	double x_offset = 0;
 	wl_list_for_each_reverse(ws, &state->workspaces, node) {
 		if (ws->state == 1) {
 			cairo_set_source_rgb(buf_ctx->cairo_ctx, 1.0, 0, 1.0);
 		} else {
 			cairo_set_source_rgb(buf_ctx->cairo_ctx, 1.0, 0.949, 0);
 		}
-		cairo_rectangle(buf_ctx->cairo_ctx, x_offset, 0, state->height * 0.75, state->height);
-		x_offset += state->height * 0.75;
+
+		pango_layout_set_text(buf_ctx->pango_layout, ws->name, -1);
+		pango_layout_get_pixel_size(buf_ctx->pango_layout,
+			&ws_name_width, &ws_name_height);
+		cairo_rectangle(buf_ctx->cairo_ctx, x_offset, 0,
+			ws_name_width * 2, state->height);
 		cairo_fill(buf_ctx->cairo_ctx);
+
+		cairo_set_source_rgb(buf_ctx->cairo_ctx, 0, 0, 0);
+		cairo_move_to(buf_ctx->cairo_ctx, x_offset + (ws_name_width / 2.0),
+			(state->height - ws_name_height) / 2.0);
+		pango_cairo_show_layout(buf_ctx->cairo_ctx,
+			buf_ctx->pango_layout);
+
+		x_offset += ws_name_width * 2;
 	}
+	pango_layout_set_width(buf_ctx->pango_layout,
+		state->width * PANGO_SCALE);
 }
 
 static void
