@@ -19,7 +19,7 @@ main(int argc, char **argv)
 	fds[1].fd = wl_display_get_fd(state->display);
 	fds[1].events = POLLIN;
 
-	while (true){
+	while (true) {
 		while (wl_display_prepare_read(state->display) != 0) {
 			wl_display_dispatch_pending(state->display);
 		}
