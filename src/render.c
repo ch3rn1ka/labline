@@ -74,7 +74,7 @@ buffer_realloc(struct buffer_context *buf_ctx, struct state *state)
 
 	/* TODO: custom fonts */
 	buf_ctx->pango_font_desc =
-		pango_font_description_from_string("Monospace 10");
+		pango_font_description_from_string(state->font);
 
 	pango_layout_set_font_description(buf_ctx->pango_layout,
 		buf_ctx->pango_font_desc);
