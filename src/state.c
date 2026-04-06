@@ -1,10 +1,15 @@
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 #include <wayland-client.h>
 
 #include "state.h"
 #include "render.h"
 #include "wayland.h"
+
+#include "ext-workspace-v1-client-protocol.h"
+#include "wlr-layer-shell-unstable-v1-client-protocol.h"
 
 /*
  * Allocate two `buffer_context` structs and mark them as stale so that their
@@ -36,24 +41,58 @@ get_font_height(const char *fontname)
 	return height;
 }
 
+static void
+parse_args(struct state *state, int argc, char **argv)
+{
+	int opt;
+	while ((opt = getopt(argc, argv, "f:a:")) != -1) {
+		switch (opt) {
+			case 'f': {
+				state->font = optarg;
+				break;
+			}
+			case 'a': {
+				if (strcmp(optarg, "bottom") == 0) {
+					state->anchor =
+						ZWLR_LAYER_SURFACE_V1_ANCHOR_BOTTOM
+						| ZWLR_LAYER_SURFACE_V1_ANCHOR_LEFT
+						| ZWLR_LAYER_SURFACE_V1_ANCHOR_RIGHT;
+				} else if (strcmp(optarg, "top") == 0) {
+					state->anchor =
+						ZWLR_LAYER_SURFACE_V1_ANCHOR_TOP
+						| ZWLR_LAYER_SURFACE_V1_ANCHOR_LEFT
+						| ZWLR_LAYER_SURFACE_V1_ANCHOR_RIGHT;
+				} else {
+					fprintf(stderr, "Incorrect anchor.");
+					exit(EXIT_FAILURE);
+				}
+			}
+		}
+	}
+}
+
 struct state *
-state_init()
+state_init(int argc, char **argv)
 {
 	struct state *state = calloc(1, sizeof(struct state));
 
-	/*
-	 * The width of the surface is left blank until `layer_surface_listener`
-	 * catches a configure event from the compositor.
-	 */
+	/* Default values: */
 	state->width = 0;
 	state->stride = 0;
-
 	state->font = "Monospace 10";
+	state->anchor = ZWLR_LAYER_SURFACE_V1_ANCHOR_BOTTOM
+		| ZWLR_LAYER_SURFACE_V1_ANCHOR_LEFT
+		| ZWLR_LAYER_SURFACE_V1_ANCHOR_RIGHT;
+
+	parse_args(state, argc, argv);
+
 	state->font_height = get_font_height(state->font);
 	state->height = state->font_height + 6;
+	printf("The height is: %d\n", state->height);
 
 	wl_list_init(&state->workspaces);
 	buffers_init(state);
 	wayland_init(state);
+
 	return state;
 }
