@@ -188,16 +188,14 @@ wayland_init(struct state *state)
 {
 	/* Display */
 	state->display = wl_display_connect(NULL);
-	if (!state->display)
-	{
+	if (!state->display) {
 		fprintf(stderr, "Failed to connect to display.\n");
 		exit(EXIT_FAILURE);
 	}
 
 	/* Registry */
 	state->registry = wl_display_get_registry(state->display);
-	if (!state->registry)
-	{
+	if (!state->registry) {
 		fprintf(stderr, "Failed to get registry.\n");
 		exit(EXIT_FAILURE);
 	}
@@ -211,10 +209,7 @@ wayland_init(struct state *state)
 			state->surface, NULL, ZWLR_LAYER_SHELL_V1_LAYER_TOP,
 			"labline");
 	zwlr_layer_surface_v1_set_size(state->layer_surface, 0, state->height);
-	zwlr_layer_surface_v1_set_anchor(state->layer_surface,
-		ZWLR_LAYER_SURFACE_V1_ANCHOR_BOTTOM
-		| ZWLR_LAYER_SURFACE_V1_ANCHOR_LEFT
-		| ZWLR_LAYER_SURFACE_V1_ANCHOR_RIGHT);
+	zwlr_layer_surface_v1_set_anchor(state->layer_surface, state->anchor);
 	zwlr_layer_surface_v1_set_exclusive_zone(state->layer_surface,
 		state->height);
 	zwlr_layer_surface_v1_add_listener(state->layer_surface,
