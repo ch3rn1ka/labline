@@ -28,6 +28,6 @@ struct state
 	int anchor;
 };
 
-struct state *state_init();
+struct state *state_init(int argc, char **argv);
 
 #endif
