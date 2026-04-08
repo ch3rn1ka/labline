@@ -93,12 +93,18 @@ buffer_draw_workspaces(struct buffer_context *buf_ctx, struct state *state)
 	int ws_name_width, ws_name_height;
 	double x_offset = 0;
 	wl_list_for_each_reverse(ws, &state->workspaces, node) {
+		struct face *current_face;
 		if (ws->state == 1) {
-			cairo_set_source_rgb(buf_ctx->cairo_ctx, 1.0, 0, 1.0);
+			current_face = &state->faces.active_ws;
 		} else {
-			cairo_set_source_rgb(buf_ctx->cairo_ctx, 1.0, 0.949, 0);
+			current_face = &state->faces.inactive_ws;
+
 		}
 
+		cairo_set_source_rgb(buf_ctx->cairo_ctx,
+				current_face->bg.r,
+				current_face->bg.g,
+				current_face->bg.b);
 		pango_layout_set_text(buf_ctx->pango_layout, ws->name, -1);
 		pango_layout_get_pixel_size(buf_ctx->pango_layout,
 			&ws_name_width, &ws_name_height);
@@ -109,7 +115,10 @@ buffer_draw_workspaces(struct buffer_context *buf_ctx, struct state *state)
 			box_width, state->height);
 		cairo_fill(buf_ctx->cairo_ctx);
 
-		cairo_set_source_rgb(buf_ctx->cairo_ctx, 0, 0, 0);
+		cairo_set_source_rgb(buf_ctx->cairo_ctx,
+				current_face->fg.r,
+				current_face->fg.g,
+				current_face->fg.b);
 		cairo_move_to(buf_ctx->cairo_ctx, x_offset + 4,
 			(state->height - ws_name_height) / 2.0);
 		pango_cairo_show_layout(buf_ctx->cairo_ctx,
@@ -124,7 +133,11 @@ buffer_draw_workspaces(struct buffer_context *buf_ctx, struct state *state)
 static void
 buffer_draw_windows(struct buffer_context *buf_ctx, struct state *state)
 {
-
+	/*
+	 * TODO: figure out how to approach this. Maybe qutebrowser-like tabs
+	 * could work? Can a window be activated with a request? Can i catch
+	 * urgent windows somehow?
+	 */
 }
 
 static void
@@ -138,7 +151,10 @@ buffer_draw_status(struct buffer_context *buf_ctx, struct state *state)
 
 	double x_offset = state->width - text_width;
 	double y_offset = (state->height - text_height) / 2.0;
-	cairo_set_source_rgb(buf_ctx->cairo_ctx, 1.0, 1.0, 1.0);
+	cairo_set_source_rgb(buf_ctx->cairo_ctx,
+		state->faces.status.fg.r,
+		state->faces.status.fg.g,
+		state->faces.status.fg.b);
 	cairo_move_to(buf_ctx->cairo_ctx, x_offset, y_offset);
 	pango_cairo_show_layout(buf_ctx->cairo_ctx, buf_ctx->pango_layout);
 }
@@ -147,8 +163,11 @@ buffer_draw_status(struct buffer_context *buf_ctx, struct state *state)
 void
 buffer_draw(struct buffer_context *buf_ctx, struct state *state)
 {
-	cairo_set_source_rgb(buf_ctx->cairo_ctx, 0.0, 0.0, 0.0);
-	cairo_paint_with_alpha(buf_ctx->cairo_ctx, 1.0);
+	cairo_set_source_rgb(buf_ctx->cairo_ctx,
+		state->faces.status.bg.r,
+		state->faces.status.bg.g,
+		state->faces.status.bg.b);
+	cairo_paint(buf_ctx->cairo_ctx);
 
 	buffer_draw_workspaces(buf_ctx, state);
 	buffer_draw_windows(buf_ctx, state);

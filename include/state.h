@@ -1,8 +1,28 @@
 #ifndef STATE_H
 #define STATE_H
 
+#include <stddef.h>
 #include <stdio.h>
 #include <wayland-client.h>
+
+struct rgb {
+	float r;
+	float g;
+	float b;
+};
+
+struct face {
+	struct rgb bg;
+	struct rgb fg;
+	struct rgb br;
+};
+
+struct faces {
+	struct face status;
+	struct face active_ws;
+	struct face inactive_ws;
+	struct face urgent_ws;
+};
 
 struct state
 {
@@ -17,9 +37,11 @@ struct state
 
 	struct wl_list workspaces;
 
-	/* Use double buffering to avoid reallocating on each configure event */
+	/* Swap between two buffers to draw the panel */
 	struct buffer_context *buffers[2];
 	char statusline[BUFSIZ];
+
+	struct faces faces;
 
 	char *font;
 	int font_height;
