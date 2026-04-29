@@ -92,7 +92,7 @@ buffer_draw_workspaces(struct buffer_context *buf_ctx, struct state *state)
 	struct workspace *ws;
 	int ws_name_width, ws_name_height;
 	double x_offset = 0;
-	wl_list_for_each_reverse(ws, &state->workspaces, node) {
+	wl_list_for_each(ws, &state->workspaces, node) {
 		struct face *current_face;
 		if (ws->state == 1) {
 			current_face = &state->faces.active_ws;
