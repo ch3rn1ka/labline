@@ -8,6 +8,8 @@ Compile it with `make`, pipe some text into it, and you're good to go!
   anchor the bar to the top/bottom (default is "bottom")
 * -f, --font [fontname]</br>
   use the specified font (default is "Monospace 10")
+* --sbg/--sfg/--sbr [HEX]</br>
+  customize statusline bg/fg/border
 * --awsbg/--awsfg/--awsbr [HEX]</br>
   customize active workspace bg/fg/border
 * --iwsbg/--iwsfg/--iwsbr [HEX]</br>

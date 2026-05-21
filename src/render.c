@@ -172,6 +172,7 @@ buffer_draw(struct buffer_context *buf_ctx, struct state *state)
 	buffer_draw_workspaces(buf_ctx, state);
 	buffer_draw_windows(buf_ctx, state);
 	buffer_draw_status(buf_ctx, state);
+
 	cairo_surface_flush(buf_ctx->cairo_surface);
 }
 
