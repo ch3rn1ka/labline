@@ -32,7 +32,7 @@ main(int argc, char **argv)
 
 		if (fds[1].revents & POLLIN) {
 			wl_display_read_events(state->display);
-			/* wl_display_dispatch_pending(state->display); */
+			wl_display_dispatch_pending(state->display);
 		} else {
 			wl_display_cancel_read(state->display);
 		}
