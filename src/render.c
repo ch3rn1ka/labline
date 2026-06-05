@@ -10,17 +10,6 @@
 #include "shm.h"
 #include "wayland.h"
 
-static void
-buffer_release(void *data, struct wl_buffer *buf)
-{
-	struct buffer_context *buf_ctx = data;
-	buf_ctx->busy = false;
-}
-
-static const struct wl_buffer_listener buffer_listener = {
-	.release = buffer_release
-};
-
 /*
  * Realloc all fields of the `buffer_context` struct. Called during
  * configure events to match the buffer dimensions to the new surface size
@@ -187,8 +176,7 @@ render(struct state *state)
 		if (!buf_ctx->busy) {
 			if (buf_ctx->stale) {
 				buffer_realloc(buf_ctx, state);
-				wl_buffer_add_listener(buf_ctx->buf,
-					&buffer_listener, buf_ctx);
+				wayland_attach_buffer_listener(buf_ctx);
 			}
 			buffer_draw(buf_ctx, state);
 			wl_surface_attach(state->surface, buf_ctx->buf, 0, 0);
