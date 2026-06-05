@@ -6,7 +6,6 @@
 
 #include "render.h"
 #include "shm.h"
-#include "wayland.h"
 
 int
 main(int argc, char **argv)

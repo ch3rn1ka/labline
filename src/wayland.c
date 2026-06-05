@@ -182,6 +182,22 @@ static const struct zwlr_layer_surface_v1_listener layer_surface_listener = {
 	.closed = layer_surface_closed
 };
 
+static void
+buffer_release(void *data, struct wl_buffer *buf)
+{
+	struct buffer_context *buf_ctx = data;
+	buf_ctx->busy = false;
+}
+
+static const struct wl_buffer_listener buffer_listener = {
+	.release = buffer_release
+};
+
+void
+wayland_attach_buffer_listener(struct buffer_context *buf_ctx)
+{
+	wl_buffer_add_listener(buf_ctx->buf, &buffer_listener, buf_ctx);
+}
 
 void
 wayland_init(struct state *state)
