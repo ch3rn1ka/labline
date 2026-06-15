@@ -8,6 +8,7 @@ SOURCES = src/main.c \
 	src/wayland.c \
 	src/state.c \
 	src/shm.c \
+	src/buffer.c \
 	src/render.c \
 	src/protocols/wlr-layer-shell-unstable-v1-protocol.c \
 	src/protocols/xdg-shell-protocol.c \
@@ -16,6 +17,7 @@ SOURCES = src/main.c \
 HEADERS = include/wayland.h \
 	include/state.h \
 	include/shm.h \
+	include/buffer.h \
 	include/render.h \
 	include/protocols/wlr-layer-shell-unstable-v1-client-protocol.h \
 	include/protocols/xdg-shell-client-protocol.h \

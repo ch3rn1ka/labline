@@ -8,25 +8,12 @@
 #include <wayland-client.h>
 
 #include "state.h"
+#include "buffer.h"
 #include "render.h"
 #include "wayland.h"
 
 #include "ext-workspace-v1-client-protocol.h"
 #include "wlr-layer-shell-unstable-v1-client-protocol.h"
-
-/*
- * Allocate two `buffer_context` structs and mark them as stale so that their
- * fields will get allocated during the next `prepare_buffer()` call.
- */
-static void
-buffers_init(struct state *state)
-{
-	for (int i = 0; i < 2; i++) {
-		state->buffers[i] = calloc(1, sizeof(struct buffer_context));
-		state->buffers[i]->fd = -1;
-		state->buffers[i]->stale = true;
-	}
-}
 
 static int
 get_font_height(const char *fontname)
