@@ -10,7 +10,7 @@
 int
 main(int argc, char **argv)
 {
-	struct state *state = state_init(argc, argv);
+	struct labline_state *state = state_init(argc, argv);
 
 	struct pollfd fds[2];
 	fds[0].fd = STDIN_FILENO;

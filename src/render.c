@@ -11,7 +11,7 @@
 #include "wayland.h"
 
 static void
-draw_workspaces(struct buffer_context *buf_ctx, struct state *state)
+draw_workspaces(struct buffer_context *buf_ctx, struct labline_state *state)
 {
 	pango_layout_set_width(buf_ctx->pango_layout, -1);
 	struct workspace *ws;
@@ -56,7 +56,7 @@ draw_workspaces(struct buffer_context *buf_ctx, struct state *state)
 }
 
 static void
-draw_windows(struct buffer_context *buf_ctx, struct state *state)
+draw_windows(struct buffer_context *buf_ctx, struct labline_state *state)
 {
 	/*
 	 * TODO: figure out how to approach this. Maybe qutebrowser-like tabs
@@ -66,7 +66,7 @@ draw_windows(struct buffer_context *buf_ctx, struct state *state)
 }
 
 static void
-draw_status(struct buffer_context *buf_ctx, struct state *state)
+draw_status(struct buffer_context *buf_ctx, struct labline_state *state)
 {
 	pango_layout_set_text(buf_ctx->pango_layout, state->statusline, -1);
 
@@ -86,7 +86,7 @@ draw_status(struct buffer_context *buf_ctx, struct state *state)
 
 /* Draw the contents of the statusline with pango and cairo. */
 void
-draw_panel(struct buffer_context *buf_ctx, struct state *state)
+draw_panel(struct buffer_context *buf_ctx, struct labline_state *state)
 {
 	cairo_set_source_rgb(buf_ctx->cairo_ctx,
 		state->faces.status.bg.r,
@@ -103,7 +103,7 @@ draw_panel(struct buffer_context *buf_ctx, struct state *state)
 
 /* Choose a buffer and draw in it, attach and commit */
 void
-render(struct state *state)
+render(struct labline_state *state)
 {
 	for (int i = 0; i < 2; ++i)
 	{

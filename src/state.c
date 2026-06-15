@@ -32,7 +32,7 @@ get_font_height(const char *fontname)
 }
 
 static void
-state_set_default_values(struct state *state)
+state_set_default_values(struct labline_state *state)
 {
 	state->faces = (struct faces) {
 		.status = {
@@ -102,7 +102,7 @@ hex_to_rgb(char *hex_code)
 }
 
 static void
-parse_args(struct state *state, int argc, char **argv)
+parse_args(struct labline_state *state, int argc, char **argv)
 {
 	enum {
 		OPT_STATUSLINE_BG = 256,
@@ -195,10 +195,10 @@ parse_args(struct state *state, int argc, char **argv)
 	}
 }
 
-struct state *
+struct labline_state *
 state_init(int argc, char **argv)
 {
-	struct state *state = calloc(1, sizeof(struct state));
+	struct labline_state *state = calloc(1, sizeof(struct labline_state));
 
 	state_set_default_values(state);
 	parse_args(state, argc, argv);
