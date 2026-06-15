@@ -7,24 +7,10 @@
 #include <unistd.h>
 #include <wayland-client.h>
 
+#include "buffer.h"
 #include "state.h"
 
-struct buffer_context {
-	void *map;
-	size_t map_size;
-	int fd;
-
-	struct wl_buffer *buf;
-	cairo_surface_t *cairo_surface;
-	cairo_t *cairo_ctx;
-	PangoLayout *pango_layout;
-	PangoFontDescription *pango_font_desc;
-
-	bool stale;
-	bool busy;
-};
-
-void buffer_draw(struct buffer_context *buf_ctx, struct state *state);
+void draw_panel(struct buffer_context *buf_ctx, struct state *state);
 void render(struct state *state);
 
 #endif
