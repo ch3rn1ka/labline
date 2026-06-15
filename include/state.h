@@ -24,7 +24,7 @@ struct faces {
 	struct face urgent_ws;
 };
 
-struct state
+struct labline_state
 {
 	struct wl_display *display;
 	struct wl_registry *registry;
@@ -50,6 +50,6 @@ struct state
 	int anchor;
 };
 
-struct state *state_init(int argc, char **argv);
+struct labline_state *state_init(int argc, char **argv);
 
 #endif

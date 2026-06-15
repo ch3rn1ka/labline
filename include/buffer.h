@@ -23,7 +23,9 @@ struct buffer_context {
 	bool busy;
 };
 
-void buffers_init(struct state *state);
-void buffer_realloc(struct buffer_context *buf_ctx, struct state *state);
+void buffers_init(struct labline_state *state);
+
+void buffer_realloc(struct buffer_context *buf_ctx,
+	struct labline_state *state);
 
 #endif

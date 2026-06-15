@@ -15,7 +15,7 @@
  * fields will get allocated during the next `prepare_buffer()` call.
  */
 void
-buffers_init(struct state *state)
+buffers_init(struct labline_state *state)
 {
 	for (int i = 0; i < 2; i++) {
 		state->buffers[i] = calloc(1, sizeof(struct buffer_context));
@@ -30,7 +30,7 @@ buffers_init(struct state *state)
  * so that `render()` could be safely called after.
  */
 void
-buffer_realloc(struct buffer_context *buf_ctx, struct state *state)
+buffer_realloc(struct buffer_context *buf_ctx, struct labline_state *state)
 {
 	if (buf_ctx->pango_layout) {
 		g_object_unref(buf_ctx->pango_layout);

@@ -10,7 +10,8 @@
 #include "buffer.h"
 #include "state.h"
 
-void draw_panel(struct buffer_context *buf_ctx, struct state *state);
-void render(struct state *state);
+void draw_panel(struct buffer_context *buf_ctx, struct labline_state *state);
+
+void render(struct labline_state *state);
 
 #endif

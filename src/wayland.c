@@ -18,7 +18,7 @@ static void
 registry_global(void *data, struct wl_registry *wl_registry,
 		uint32_t name, const char *iface, uint32_t server_iface_version)
 {
-	struct state *state = data;
+	struct labline_state *state = data;
 
 	const struct wl_interface *i = NULL; /* shorthand for wl_*_interface */
 	uint32_t bind_version, library_iface_version;
@@ -79,7 +79,7 @@ workspace_handle_state(void *data,
 {
 	struct workspace_callback_data *callback_data = data;
 	struct workspace *workspace = callback_data->workspace;
-	struct state *program_state = callback_data->state;
+	struct labline_state *program_state = callback_data->state;
 	workspace->state = state;
 
 	/* Trigger a re-render if the surface is initialized. */
@@ -117,7 +117,7 @@ static void
 workspace_manager_workspace(void *data, struct ext_workspace_manager_v1 *mgr,
 		struct ext_workspace_handle_v1 *handle)
 {
-	struct state *state = data;
+	struct labline_state *state = data;
 	struct workspace *new_workspace = calloc(1, sizeof(struct workspace));
 	new_workspace->handle = handle;
 	wl_list_insert(&state->workspaces, &new_workspace->node);
@@ -156,7 +156,7 @@ static void
 layer_surface_configure(void *data, struct zwlr_layer_surface_v1 *layer_surface,
 		uint32_t serial, uint32_t width, uint32_t height)
 {
-	struct state *state = data;
+	struct labline_state *state = data;
 
 	if (width != state->width || height != state->height) {
 		state->width = width;
@@ -200,7 +200,7 @@ wayland_attach_buffer_listener(struct buffer_context *buf_ctx)
 }
 
 void
-wayland_init(struct state *state)
+wayland_init(struct labline_state *state)
 {
 	/* Display */
 	state->display = wl_display_connect(NULL);

@@ -15,11 +15,12 @@ struct workspace {
 };
 
 struct workspace_callback_data {
-	struct state *state;
+	struct labline_state *state;
 	struct workspace *workspace;
 };
 
 void wayland_attach_buffer_listener(struct buffer_context *buf_ctx);
-void wayland_init(struct state *state);
+
+void wayland_init(struct labline_state *state);
 
 #endif
