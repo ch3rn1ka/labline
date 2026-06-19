@@ -13,7 +13,7 @@ struct buffer_context {
 	size_t map_size;
 	int fd;
 
-	struct wl_buffer *buf;
+	struct wl_buffer *wl_buffer;
 	cairo_surface_t *cairo_surface;
 	cairo_t *cairo_ctx;
 	PangoLayout *pango_layout;

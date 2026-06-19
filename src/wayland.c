@@ -194,9 +194,9 @@ static const struct wl_buffer_listener buffer_listener = {
 };
 
 void
-wayland_attach_buffer_listener(struct buffer_context *buf_ctx)
+wayland_buffer_add_listener(struct buffer_context *buf_ctx)
 {
-	wl_buffer_add_listener(buf_ctx->buf, &buffer_listener, buf_ctx);
+	wl_buffer_add_listener(buf_ctx->wl_buffer, &buffer_listener, buf_ctx);
 }
 
 void

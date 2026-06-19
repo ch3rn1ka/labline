@@ -19,7 +19,7 @@ struct workspace_callback_data {
 	struct workspace *workspace;
 };
 
-void wayland_attach_buffer_listener(struct buffer_context *buf_ctx);
+void wayland_buffer_add_listener(struct buffer_context *buf_ctx);
 
 void wayland_init(struct labline_state *state);
 

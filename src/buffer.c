@@ -44,8 +44,8 @@ buffer_realloc(struct buffer_context *buf_ctx, struct labline_state *state)
 	if (buf_ctx->cairo_surface) {
 		cairo_surface_destroy(buf_ctx->cairo_surface);
 	}
-	if (buf_ctx->buf) {
-		wl_buffer_destroy(buf_ctx->buf);
+	if (buf_ctx->wl_buffer) {
+		wl_buffer_destroy(buf_ctx->wl_buffer);
 	}
 	if (buf_ctx->map) {
 		munmap(buf_ctx->map, buf_ctx->map_size);
@@ -63,12 +63,14 @@ buffer_realloc(struct buffer_context *buf_ctx, struct labline_state *state)
 	/* TODO: handle errors */
 	buf_ctx->map = map;
 
+	/* Buffer */
 	struct wl_shm_pool *pool = wl_shm_create_pool(state->shm, fd,
 		buf_ctx->map_size);
-	buf_ctx->buf = wl_shm_pool_create_buffer(pool, 0, state->width,
+	buf_ctx->wl_buffer = wl_shm_pool_create_buffer(pool, 0, state->width,
 		state->height, state->stride, WL_SHM_FORMAT_ARGB8888);
 	wl_shm_pool_destroy(pool);
 
+	/* Pango/cairo globals */
 	buf_ctx->cairo_surface =
 		cairo_image_surface_create_for_data(map, CAIRO_FORMAT_ARGB32,
 			state->width, state->height, state->stride);
