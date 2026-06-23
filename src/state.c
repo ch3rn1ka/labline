@@ -10,6 +10,7 @@
 #include "state.h"
 #include "buffer.h"
 #include "render.h"
+#include "util.h"
 #include "wayland.h"
 
 #include "ext-workspace-v1-client-protocol.h"
@@ -151,8 +152,7 @@ parse_args(struct labline_state *state, int argc, char **argv)
 						| ZWLR_LAYER_SURFACE_V1_ANCHOR_LEFT
 						| ZWLR_LAYER_SURFACE_V1_ANCHOR_RIGHT;
 				} else {
-					fprintf(stderr, "Incorrect anchor.");
-					exit(EXIT_FAILURE);
+					die("Incorrect anchor");
 				}
 				break;
 			case 'f':

@@ -10,6 +10,7 @@
 #include "render.h"
 #include "shm.h"
 #include "state.h"
+#include "util.h"
 
 #include "ext-workspace-v1-client-protocol.h"
 #include "wlr-layer-shell-unstable-v1-client-protocol.h"
@@ -205,15 +206,13 @@ wayland_init(struct labline_state *state)
 	/* Display */
 	state->display = wl_display_connect(NULL);
 	if (!state->display) {
-		fprintf(stderr, "Failed to connect to display.\n");
-		exit(EXIT_FAILURE);
+		die("Failed to connect to display");
 	}
 
 	/* Registry */
 	state->registry = wl_display_get_registry(state->display);
 	if (!state->registry) {
-		fprintf(stderr, "Failed to get registry.\n");
-		exit(EXIT_FAILURE);
+		die("Failed to get registry");
 	}
 	wl_registry_add_listener(state->registry, &registry_listener, state);
 	wl_display_roundtrip(state->display);
@@ -233,9 +232,7 @@ wayland_init(struct labline_state *state)
 
 	/* Workspace manager */
 	if (!state->workspace_manager) {
-		fprintf(stderr,
-			"Workspace manager not supported by the compositor.\n");
-		exit(EXIT_FAILURE);
+		die("Workspace manager not supported by the compositor");
 	}
 	ext_workspace_manager_v1_add_listener(state->workspace_manager,
 		&workspace_manager_listener, state);
