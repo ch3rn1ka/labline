@@ -128,21 +128,26 @@ parse_args(struct labline_state *state, int argc, char **argv)
 	while ((option = getopt_long(argc, argv, "a:f:",
 			long_options, NULL)) != -1) {
 		switch (option) {
-			case 'a':
+			case 'a': {
+				uint32_t sides =
+					ZWLR_LAYER_SURFACE_V1_ANCHOR_LEFT
+					| ZWLR_LAYER_SURFACE_V1_ANCHOR_RIGHT;
 				if (strcmp(optarg, "bottom") == 0) {
-					state->anchor |= ZWLR_LAYER_SURFACE_V1_ANCHOR_BOTTOM;
+					state->anchor = sides
+						| ZWLR_LAYER_SURFACE_V1_ANCHOR_BOTTOM;
 				} else if (strcmp(optarg, "top") == 0) {
-					state->anchor |= ZWLR_LAYER_SURFACE_V1_ANCHOR_TOP;
+					state->anchor = sides
+						| ZWLR_LAYER_SURFACE_V1_ANCHOR_TOP;
 				} else {
-					warn("Incorrect anchor. Defaulting to \"bottom\"");
-					state->anchor |= ZWLR_LAYER_SURFACE_V1_ANCHOR_BOTTOM;
+					warn("Incorrect anchor: %s", optarg);
 				}
 				break;
+			}
 			case 'f': state->font = optarg; break;
 			case 1: state->faces.status.bg = hex_to_rgb(optarg); break;
 			case 2: state->faces.status.fg = hex_to_rgb(optarg); break;
 			case 3: state->faces.active_ws.bg = hex_to_rgb(optarg); break;
-			case 4 : state->faces.active_ws.fg = hex_to_rgb(optarg); break;
+			case 4: state->faces.active_ws.fg = hex_to_rgb(optarg); break;
 			case 5: state->faces.active_ws.br = hex_to_rgb(optarg); break;
 			case 6: state->faces.inactive_ws.bg = hex_to_rgb(optarg); break;
 			case 7: state->faces.inactive_ws.fg = hex_to_rgb(optarg); break;
@@ -165,7 +170,6 @@ state_init(int argc, char **argv)
 
 	state->font_height = get_font_height(state->font);
 	state->height = state->font_height + 10;
-	/* printf("DEBUG: The height is: %d\n", state->height); */
 
 	wl_list_init(&state->workspaces);
 	buffers_init(state);
