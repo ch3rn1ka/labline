@@ -23,4 +23,4 @@ void wayland_buffer_add_listener(struct buffer_context *buf_ctx);
 
 void wayland_init(struct labline_state *state);
 
-#endif
+#endif	/* WAYLAND_H */

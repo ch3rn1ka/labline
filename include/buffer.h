@@ -27,4 +27,4 @@ void buffers_init(struct labline_state *state);
 void buffer_realloc(struct buffer_context *buf_ctx,
 	struct labline_state *state);
 
-#endif
+#endif	/* BUFFER_H */

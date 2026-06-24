@@ -9,4 +9,4 @@ void _warn(char *filename, int line_num, char *fmt, ...);
 
 #define warn(...) _warn(__FILE__, __LINE__, __VA_ARGS__)
 
-#endif
+#endif	/* UTIL_H */
