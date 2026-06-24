@@ -88,8 +88,8 @@ hex_to_rgb(char *hex_code)
 	struct rgb color = {0.0f, 0.0f, 0.0f};
 
 	if (!is_valid_hex(hex_code)) {
-		fprintf(stderr, "Warning: wrong HEX color code %s\n", hex_code);
-		return (struct rgb) {1.0, 0.0, 0.0};
+		warn("Wrong HEX color code: %s", hex_code);
+		return color;
 	}
 	hex_code++;
 
@@ -97,6 +97,8 @@ hex_to_rgb(char *hex_code)
 		color.r = r / 255.0f;
 		color.g = g / 255.0f;
 		color.b = b / 255.0f;
+	} else {
+		warn("Couldn't read colors properly");
 	}
 
 	return color;
@@ -105,34 +107,20 @@ hex_to_rgb(char *hex_code)
 static void
 parse_args(struct labline_state *state, int argc, char **argv)
 {
-	enum {
-		OPT_STATUSLINE_BG = 256,
-		OPT_STATUSLINE_FG,
-		OPT_ACTIVE_WORKSPACE_BG,
-		OPT_ACTIVE_WORKSPACE_FG,
-		OPT_ACTIVE_WORKSPACE_BORDER,
-		OPT_INACTIVE_WORKSPACE_BG,
-		OPT_INACTIVE_WORKSPACE_FG,
-		OPT_INACTIVE_WORKSPACE_BORDER,
-		OPT_URGENT_WORKSPACE_BG,
-		OPT_URGENT_WORKSPACE_FG,
-		OPT_URGENT_WORKSPACE_BORDER,
-	};
-
 	const struct option long_options[] = {
 		{"anchor", required_argument, NULL, 'a'},
 		{"font", required_argument, NULL, 'f'},
-		{"sbg", required_argument, NULL, OPT_STATUSLINE_BG},
-		{"sfg", required_argument, NULL, OPT_STATUSLINE_FG},
-		{"awsbg", required_argument, NULL, OPT_ACTIVE_WORKSPACE_BG},
-		{"awsfg", required_argument, NULL, OPT_ACTIVE_WORKSPACE_FG},
-		{"awsbr", required_argument, NULL, OPT_ACTIVE_WORKSPACE_BORDER},
-		{"iwsbg", required_argument, NULL, OPT_INACTIVE_WORKSPACE_BG},
-		{"iwsfg", required_argument, NULL, OPT_INACTIVE_WORKSPACE_FG},
-		{"iwsbr", required_argument, NULL, OPT_INACTIVE_WORKSPACE_BORDER},
-		{"uwsbg", required_argument, NULL, OPT_URGENT_WORKSPACE_BG},
-		{"uwsfg", required_argument, NULL, OPT_URGENT_WORKSPACE_FG},
-		{"uwsbr", required_argument, NULL, OPT_URGENT_WORKSPACE_BORDER},
+		{"sbg", required_argument, NULL, 1},
+		{"sfg", required_argument, NULL, 2},
+		{"awsbg", required_argument, NULL, 3},
+		{"awsfg", required_argument, NULL, 4},
+		{"awsbr", required_argument, NULL, 5},
+		{"iwsbg", required_argument, NULL, 6},
+		{"iwsfg", required_argument, NULL, 7},
+		{"iwsbr", required_argument, NULL, 8},
+		{"uwsbg", required_argument, NULL, 9},
+		{"uwsfg", required_argument, NULL, 10},
+		{"uwsbr", required_argument, NULL, 11},
 		{0, 0, 0, 0}
 	};
 
@@ -142,55 +130,27 @@ parse_args(struct labline_state *state, int argc, char **argv)
 		switch (option) {
 			case 'a':
 				if (strcmp(optarg, "bottom") == 0) {
-					state->anchor =
-						ZWLR_LAYER_SURFACE_V1_ANCHOR_BOTTOM
-						| ZWLR_LAYER_SURFACE_V1_ANCHOR_LEFT
-						| ZWLR_LAYER_SURFACE_V1_ANCHOR_RIGHT;
+					state->anchor |= ZWLR_LAYER_SURFACE_V1_ANCHOR_BOTTOM;
 				} else if (strcmp(optarg, "top") == 0) {
-					state->anchor =
-						ZWLR_LAYER_SURFACE_V1_ANCHOR_TOP
-						| ZWLR_LAYER_SURFACE_V1_ANCHOR_LEFT
-						| ZWLR_LAYER_SURFACE_V1_ANCHOR_RIGHT;
+					state->anchor |= ZWLR_LAYER_SURFACE_V1_ANCHOR_TOP;
 				} else {
-					die("Incorrect anchor");
+					warn("Incorrect anchor. Defaulting to \"bottom\"");
+					state->anchor |= ZWLR_LAYER_SURFACE_V1_ANCHOR_BOTTOM;
 				}
 				break;
-			case 'f':
-				state->font = optarg;
-				break;
-			case OPT_STATUSLINE_BG:
-				state->faces.status.bg = hex_to_rgb(optarg);
-				break;
-			case OPT_STATUSLINE_FG:
-				state->faces.status.fg = hex_to_rgb(optarg);
-				break;
-			case OPT_ACTIVE_WORKSPACE_BG:
-				state->faces.active_ws.bg = hex_to_rgb(optarg);
-				break;
-			case OPT_ACTIVE_WORKSPACE_FG:
-				state->faces.active_ws.fg = hex_to_rgb(optarg);
-				break;
-			case OPT_ACTIVE_WORKSPACE_BORDER:
-				state->faces.active_ws.br = hex_to_rgb(optarg);
-				break;
-			case OPT_INACTIVE_WORKSPACE_BG:
-				state->faces.inactive_ws.bg = hex_to_rgb(optarg);
-				break;
-			case OPT_INACTIVE_WORKSPACE_FG:
-				state->faces.inactive_ws.fg = hex_to_rgb(optarg);
-				break;
-			case OPT_INACTIVE_WORKSPACE_BORDER:
-				state->faces.inactive_ws.br = hex_to_rgb(optarg);
-				break;
-			case OPT_URGENT_WORKSPACE_BG:
-				state->faces.urgent_ws.bg = hex_to_rgb(optarg);
-				break;
-			case OPT_URGENT_WORKSPACE_FG:
-				state->faces.urgent_ws.fg = hex_to_rgb(optarg);
-				break;
-			case OPT_URGENT_WORKSPACE_BORDER:
-				state->faces.urgent_ws.br = hex_to_rgb(optarg);
-				break;
+			case 'f': state->font = optarg; break;
+			case 1: state->faces.status.bg = hex_to_rgb(optarg); break;
+			case 2: state->faces.status.fg = hex_to_rgb(optarg); break;
+			case 3: state->faces.active_ws.bg = hex_to_rgb(optarg); break;
+			case 4 : state->faces.active_ws.fg = hex_to_rgb(optarg); break;
+			case 5: state->faces.active_ws.br = hex_to_rgb(optarg); break;
+			case 6: state->faces.inactive_ws.bg = hex_to_rgb(optarg); break;
+			case 7: state->faces.inactive_ws.fg = hex_to_rgb(optarg); break;
+			case 8: state->faces.inactive_ws.br = hex_to_rgb(optarg); break;
+			case 9: state->faces.urgent_ws.bg = hex_to_rgb(optarg); break;
+			case 10: state->faces.urgent_ws.fg = hex_to_rgb(optarg); break;
+			case 11: state->faces.urgent_ws.br = hex_to_rgb(optarg); break;
+			case '?': break;
 		}
 	}
 }
