@@ -9,9 +9,8 @@
 #include "state.h"
 
 struct buffer_context {
-	void *map;
-	size_t map_size;
-	int fd;
+	void *buf;
+	size_t buf_size;
 
 	struct wl_buffer *wl_buffer;
 	cairo_surface_t *cairo_surface;
