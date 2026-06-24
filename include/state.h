@@ -52,4 +52,4 @@ struct labline_state
 
 struct labline_state *state_init(int argc, char **argv);
 
-#endif
+#endif	/* STATE_H */

@@ -14,4 +14,4 @@ void draw_panel(struct buffer_context *buf_ctx, struct labline_state *state);
 
 void render(struct labline_state *state);
 
-#endif
+#endif	/* RENDER_H */

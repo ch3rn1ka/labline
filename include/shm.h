@@ -5,4 +5,4 @@
 
 int create_shm_file(size_t size);
 
-#endif
+#endif	/* SHM_H */
