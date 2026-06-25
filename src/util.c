@@ -23,7 +23,7 @@ _die(char *filename, int line_num, char *fmt, ...)
 void
 _warn(char *filename, int line_num, char *fmt, ...)
 {
-	fprintf(stderr, "ERROR: [%s:%d] ", filename, line_num);
+	fprintf(stderr, "WARNING: [%s:%d] ", filename, line_num);
 
 	va_list args;
 	va_start(args, fmt);
@@ -33,5 +33,4 @@ _warn(char *filename, int line_num, char *fmt, ...)
 	va_end(args);
 
 	putchar('\n');
-	exit(EXIT_FAILURE);
 }
