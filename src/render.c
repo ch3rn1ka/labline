@@ -23,13 +23,12 @@ draw_workspaces(struct buffer_context *buf_ctx, struct labline_state *state)
 			current_face = &state->faces.active_ws;
 		} else {
 			current_face = &state->faces.inactive_ws;
-
 		}
 
 		cairo_set_source_rgb(buf_ctx->cairo_ctx,
-				current_face->bg.r,
-				current_face->bg.g,
-				current_face->bg.b);
+			current_face->bg.r,
+			current_face->bg.g,
+			current_face->bg.b);
 		pango_layout_set_text(buf_ctx->pango_layout, ws->name, -1);
 		pango_layout_get_pixel_size(buf_ctx->pango_layout,
 			&ws_name_width, &ws_name_height);
@@ -41,9 +40,9 @@ draw_workspaces(struct buffer_context *buf_ctx, struct labline_state *state)
 		cairo_fill(buf_ctx->cairo_ctx);
 
 		cairo_set_source_rgb(buf_ctx->cairo_ctx,
-				current_face->fg.r,
-				current_face->fg.g,
-				current_face->fg.b);
+			current_face->fg.r,
+			current_face->fg.g,
+			current_face->fg.b);
 		cairo_move_to(buf_ctx->cairo_ctx, x_offset + 4,
 			(state->height - ws_name_height) / 2.0);
 		pango_cairo_show_layout(buf_ctx->cairo_ctx,
