@@ -15,40 +15,37 @@
 #include "ext-workspace-v1-client-protocol.h"
 #include "wlr-layer-shell-unstable-v1-client-protocol.h"
 
+static void *
+wayland_bind_global(struct wl_registry *wl_registry, uint32_t iface_id,
+		const struct wl_interface *iface, uint32_t server_iface_version)
+{
+	uint32_t library_iface_version = iface->version;
+	uint32_t bind_version =
+		MIN(server_iface_version, library_iface_version);
+
+	return wl_registry_bind(wl_registry, iface_id, iface, bind_version);
+}
+
 static void
 registry_global(void *data, struct wl_registry *wl_registry,
-		uint32_t name, const char *iface, uint32_t server_iface_version)
+		uint32_t iface_id, const char *iface_name,
+		uint32_t version)
 {
 	struct labline_state *state = data;
-
-	const struct wl_interface *i = NULL; /* shorthand for wl_*_interface */
-	uint32_t bind_version, library_iface_version;
-	if (strcmp(iface, wl_compositor_interface.name) == 0)
-	{
-		i = &wl_compositor_interface;
-		library_iface_version = i->version;
-		bind_version = MIN(server_iface_version, library_iface_version);
-		state->compositor =
-			wl_registry_bind(wl_registry, name, i, bind_version);
-	} else if (strcmp(iface, wl_shm_interface.name) == 0) {
-		i = &wl_shm_interface;
-		library_iface_version = i->version;
-		bind_version = MIN(server_iface_version, library_iface_version);
-		state->shm =
-			wl_registry_bind(wl_registry, name, i, bind_version);
-	} else if (strcmp(iface, zwlr_layer_shell_v1_interface.name) == 0) {
-		i = &zwlr_layer_shell_v1_interface;
-		library_iface_version = i->version;
-		bind_version = MIN(server_iface_version, library_iface_version);
-		state->layer_shell =
-			wl_registry_bind(wl_registry, name, i, bind_version);
-	} else if (strcmp(iface,
+	if (strcmp(iface_name, wl_compositor_interface.name) == 0) {
+		state->compositor = wayland_bind_global(wl_registry,
+			iface_id, &wl_compositor_interface, version);
+	} else if (strcmp(iface_name, wl_shm_interface.name) == 0) {
+		state->shm = wayland_bind_global(wl_registry,
+			iface_id, &wl_shm_interface, version);
+	} else if (strcmp(iface_name,
+			zwlr_layer_shell_v1_interface.name) == 0) {
+		state->layer_shell = wayland_bind_global(wl_registry,
+			iface_id, &zwlr_layer_shell_v1_interface, version);
+	} else if (strcmp(iface_name,
 			ext_workspace_manager_v1_interface.name) == 0) {
-		i = &ext_workspace_manager_v1_interface;
-		library_iface_version = i->version;
-		bind_version = MIN(server_iface_version, library_iface_version);
-		state->workspace_manager =
-			wl_registry_bind(wl_registry, name, i, bind_version);
+		state->workspace_manager = wayland_bind_global(wl_registry,
+			iface_id, &ext_workspace_manager_v1_interface, version);
 	}
 }
 
