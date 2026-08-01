@@ -14,9 +14,11 @@ static void
 draw_workspaces(struct buffer_context *buf_ctx, struct labline_state *state)
 {
 	pango_layout_set_width(buf_ctx->pango_layout, -1);
+
 	struct workspace *ws;
 	int ws_name_width, ws_name_height;
 	double x_offset = 0;
+
 	wl_list_for_each_reverse(ws, &state->workspaces, node) {
 		struct face *current_face;
 		if (ws->state == 1) {
@@ -104,8 +106,7 @@ draw_panel(struct buffer_context *buf_ctx, struct labline_state *state)
 void
 render(struct labline_state *state)
 {
-	for (int i = 0; i < 2; ++i)
-	{
+	for (int i = 0; i < 2; ++i) {
 		struct buffer_context *buf_ctx = state->buffers[i];
 
 		if (!buf_ctx->busy) {

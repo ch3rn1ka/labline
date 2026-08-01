@@ -12,6 +12,7 @@ SOURCES = src/buffer.c \
 	src/util.c \
 	src/wayland.c \
 	src/protocols/ext-workspace-v1-protocol.c \
+	src/protocols/wlr-foreign-management-unstable-v1-protocol.c \
 	src/protocols/wlr-layer-shell-unstable-v1-protocol.c \
 	src/protocols/xdg-shell-protocol.c
 
@@ -22,11 +23,18 @@ HEADERS = include/buffer.h \
 	include/util.h \
 	include/wayland.h \
 	include/protocols/ext-workspace-v1-client-protocol.h \
+	include/protocols/wlr-foreign-management-unstable-v1-client-protocol.h \
 	include/protocols/wlr-layer-shell-unstable-v1-client-protocol.h \
 	include/protocols/xdg-shell-client-protocol.h
 
 labline: $(SOURCES)
 	$(CC) $(CFLAGS) $(SOURCES) -o $@ $(LDFLAGS)
 
-clean:
+install: labline
+	sudo cp ./labline /usr/local/bin/labline
+
+uninstall:
+	sudo rm -f /usr/local/bin/labline
+
+clean: uninstall
 	rm -f labline

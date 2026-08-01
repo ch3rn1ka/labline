@@ -33,6 +33,7 @@ struct labline_state
 	struct wl_surface *surface;
 	struct zwlr_layer_shell_v1 *layer_shell;
 	struct zwlr_layer_surface_v1 *layer_surface;
+	struct zwlr_foreign_toplevel_manager_v1 *toplevel_manager;
 	struct ext_workspace_manager_v1 *workspace_manager;
 
 	struct wl_list workspaces;
