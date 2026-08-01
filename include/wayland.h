@@ -5,7 +5,7 @@
 
 #ifndef MIN
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
-#endif
+#endif	/* MIN */
 
 struct workspace {
 	struct ext_workspace_handle_v1 *handle;

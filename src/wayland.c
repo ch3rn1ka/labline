@@ -13,10 +13,11 @@
 #include "util.h"
 
 #include "ext-workspace-v1-client-protocol.h"
+#include "wlr-foreign-management-unstable-v1-client-protocol.h"
 #include "wlr-layer-shell-unstable-v1-client-protocol.h"
 
 static void *
-wayland_bind_global(struct wl_registry *wl_registry, uint32_t iface_id,
+_bind_global(struct wl_registry *wl_registry, uint32_t iface_id,
 		const struct wl_interface *iface, uint32_t server_iface_version)
 {
 	uint32_t library_iface_version = iface->version;
@@ -26,28 +27,35 @@ wayland_bind_global(struct wl_registry *wl_registry, uint32_t iface_id,
 	return wl_registry_bind(wl_registry, iface_id, iface, bind_version);
 }
 
+#define bind_global(interface) \
+	_bind_global(wl_registry, iface_id, &(interface), version)
+
 static void
 registry_global(void *data, struct wl_registry *wl_registry,
 		uint32_t iface_id, const char *iface_name,
 		uint32_t version)
 {
 	struct labline_state *state = data;
+
 	if (strcmp(iface_name, wl_compositor_interface.name) == 0) {
-		state->compositor = wayland_bind_global(wl_registry,
-			iface_id, &wl_compositor_interface, version);
+		state->compositor = bind_global(wl_compositor_interface);
 	} else if (strcmp(iface_name, wl_shm_interface.name) == 0) {
-		state->shm = wayland_bind_global(wl_registry,
-			iface_id, &wl_shm_interface, version);
+		state->shm = bind_global(wl_shm_interface);
 	} else if (strcmp(iface_name,
 			zwlr_layer_shell_v1_interface.name) == 0) {
-		state->layer_shell = wayland_bind_global(wl_registry,
-			iface_id, &zwlr_layer_shell_v1_interface, version);
+		state->layer_shell = bind_global(zwlr_layer_shell_v1_interface);
 	} else if (strcmp(iface_name,
 			ext_workspace_manager_v1_interface.name) == 0) {
-		state->workspace_manager = wayland_bind_global(wl_registry,
-			iface_id, &ext_workspace_manager_v1_interface, version);
+		state->workspace_manager =
+			bind_global(ext_workspace_manager_v1_interface);
+	} else if (strcmp(iface_name,
+			zwlr_foreign_toplevel_manager_v1_interface.name) == 0) {
+		state->toplevel_manager =
+			bind_global(zwlr_foreign_toplevel_manager_v1_interface);
 	}
 }
+
+#undef bind_global
 
 static void
 registry_global_remove() {}
@@ -80,7 +88,7 @@ workspace_handle_state(void *data,
 	struct labline_state *program_state = callback_data->state;
 	workspace->state = state;
 
-	/* Trigger a re-render if the surface is initialized. */
+	/* Trigger a re-render if the surface is initialized */
 	if (program_state->width != 0) {
 		render(program_state);
 	}
@@ -120,6 +128,7 @@ workspace_manager_workspace(void *data, struct ext_workspace_manager_v1 *mgr,
 	new_workspace->handle = handle;
 	wl_list_insert(&state->workspaces, &new_workspace->node);
 
+	/* I needed a way to crum a bunch of data in the listener callback */
 	struct workspace_callback_data *callback_data =
 		calloc(1, sizeof(struct workspace_callback_data));
 	callback_data->workspace = new_workspace;
@@ -149,7 +158,6 @@ workspace_manager_listener = {
 	.finished = workspace_manager_finished
 };
 
-/* Main buffer realloc logic here. */
 static void
 layer_surface_configure(void *data, struct zwlr_layer_surface_v1 *layer_surface,
 		uint32_t serial, uint32_t width, uint32_t height)
@@ -178,6 +186,26 @@ layer_surface_closed(void *data, struct zwlr_layer_surface_v1 *layer_surface)
 static const struct zwlr_layer_surface_v1_listener layer_surface_listener = {
 	.configure = layer_surface_configure,
 	.closed = layer_surface_closed
+};
+
+static void
+toplevel_manager_toplevel(void *data,
+		struct zwlr_foreign_toplevel_manager_v1 *zwlr_foreign_toplevel_manager_v1,
+		struct zwlr_foreign_toplevel_handle_v1 *toplevel)
+{
+}
+
+static void
+toplevel_manager_finished(void *data,
+		struct zwlr_foreign_toplevel_manager_v1 *zwlr_foreign_toplevel_manager_v1)
+{
+
+}
+
+static const struct zwlr_foreign_toplevel_manager_v1_listener
+toplevel_manager_listener = {
+	.toplevel = toplevel_manager_toplevel,
+	.finished = toplevel_manager_finished
 };
 
 static void
@@ -233,8 +261,15 @@ wayland_init(struct labline_state *state)
 	}
 	ext_workspace_manager_v1_add_listener(state->workspace_manager,
 		&workspace_manager_listener, state);
-	wl_display_roundtrip(state->display);
 
+	/* Toplevel manager */
+	if (!state->toplevel_manager) {
+		die("Toplevel manager not supported by the compositor");
+	}
+	zwlr_foreign_toplevel_manager_v1_add_listener(state->toplevel_manager,
+		&toplevel_manager_listener, state);
+
+	wl_display_roundtrip(state->display);
 	wl_surface_commit(state->surface);
 	wl_display_flush(state->display);
 	wl_display_roundtrip(state->display);
