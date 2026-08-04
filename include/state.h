@@ -1,6 +1,7 @@
 #ifndef STATE_H
 #define STATE_H
 
+#include <stdbool.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <wayland-client.h>
@@ -51,6 +52,8 @@ struct labline_state
 
 	uint32_t width, height, stride;
 	int anchor;
+
+	bool needs_render;
 };
 
 struct labline_state *state_init(int argc, char **argv);

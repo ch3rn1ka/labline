@@ -87,7 +87,7 @@ workspace_handle_state(void *data,
 	struct workspace *workspace = callback_data->workspace;
 	workspace->state = workspace_state;
 
-	render(callback_data->state);
+	callback_data->state->needs_render = true;
 }
 
 static void
@@ -171,7 +171,7 @@ layer_surface_configure(void *data, struct zwlr_layer_surface_v1 *layer_surface,
 	}
 
 	zwlr_layer_surface_v1_ack_configure(layer_surface, serial);
-	render(state);
+	state->needs_render = true;
 }
 
 static void
@@ -227,6 +227,8 @@ void toplevel_handle_state(void *data,
 		/* Previously active toplevel became inactive */
 		labline_state->active_toplevel = NULL;
 	}
+
+	labline_state->needs_render = true;
 }
 
 void toplevel_handle_done() {}

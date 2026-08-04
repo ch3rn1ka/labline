@@ -34,3 +34,20 @@ _warn(char *filename, int line_num, char *fmt, ...)
 
 	putchar('\n');
 }
+
+void
+_debug(char *filename, int line_num, char *fmt, ...)
+{
+#ifndef NO_DEBUG
+	fprintf(stderr, "DEBUG: [%s:%d] ", filename, line_num);
+
+	va_list args;
+	va_start(args, fmt);
+
+	vprintf(fmt, args);
+
+	va_end(args);
+
+	putchar('\n');
+#endif	/* NO_DEBUG */
+}
