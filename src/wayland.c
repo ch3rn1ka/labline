@@ -196,6 +196,8 @@ void toplevel_handle_title(void *data,
 		free(toplevel->title);
 	}
 	toplevel->title = strdup(title);
+
+	callback_data->state->needs_render = true;
 }
 
 void toplevel_handle_app_id() {}
