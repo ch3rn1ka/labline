@@ -80,18 +80,14 @@ workspace_handle_name(void *data, struct ext_workspace_handle_v1 *handle,
 
 static void
 workspace_handle_state(void *data,
-		struct ext_workspace_handle_v1 *ext_workspace_handle_v1,
-		uint32_t state)
+		struct ext_workspace_handle_v1 *handle,
+		uint32_t workspace_state)
 {
 	struct workspace_callback_data *callback_data = data;
 	struct workspace *workspace = callback_data->workspace;
-	struct labline_state *program_state = callback_data->state;
-	workspace->state = state;
+	workspace->state = workspace_state;
 
-	/* Trigger a re-render if the surface is initialized */
-	if (program_state->width != 0) {
-		render(program_state);
-	}
+	render(callback_data->state);
 }
 
 static void
@@ -120,7 +116,8 @@ workspace_handle_listener = {
 };
 
 static void
-workspace_manager_workspace(void *data, struct ext_workspace_manager_v1 *mgr,
+workspace_manager_workspace(void *data,
+		struct ext_workspace_manager_v1 *manager,
 		struct ext_workspace_handle_v1 *handle)
 {
 	struct labline_state *state = data;
@@ -128,11 +125,11 @@ workspace_manager_workspace(void *data, struct ext_workspace_manager_v1 *mgr,
 	new_workspace->handle = handle;
 	wl_list_insert(&state->workspaces, &new_workspace->node);
 
-	/* I needed a way to crum a bunch of data in the listener callback */
 	struct workspace_callback_data *callback_data =
 		calloc(1, sizeof(struct workspace_callback_data));
 	callback_data->workspace = new_workspace;
 	callback_data->state = state;
+
 	ext_workspace_handle_v1_add_listener(handle,
 		&workspace_handle_listener, callback_data);
 }
@@ -172,8 +169,8 @@ layer_surface_configure(void *data, struct zwlr_layer_surface_v1 *layer_surface,
 		state->buffers[0]->stale = true;
 		state->buffers[1]->stale = true;
 	}
-	zwlr_layer_surface_v1_ack_configure(layer_surface, serial);
 
+	zwlr_layer_surface_v1_ack_configure(layer_surface, serial);
 	render(state);
 }
 
@@ -188,18 +185,90 @@ static const struct zwlr_layer_surface_v1_listener layer_surface_listener = {
 	.closed = layer_surface_closed
 };
 
+void toplevel_handle_title(void *data,
+		struct zwlr_foreign_toplevel_handle_v1 *handle,
+		const char *title)
+{
+	struct toplevel_callback_data *callback_data = data;
+	struct toplevel *toplevel = callback_data->toplevel;
+
+	if (toplevel->title) {
+		free(toplevel->title);
+	}
+	toplevel->title = strdup(title);
+}
+
+void toplevel_handle_app_id() {}
+
+void toplevel_handle_output_enter() {}
+
+void toplevel_handle_output_leave() {}
+
+void toplevel_handle_state(void *data,
+		struct zwlr_foreign_toplevel_handle_v1 *handle,
+		struct wl_array *state)
+{
+	struct toplevel_callback_data *callback_data = data;
+	struct labline_state *labline_state = callback_data->state;
+	struct toplevel *this_toplevel = callback_data->toplevel;
+
+	bool activated = false;
+	uint32_t *state_elem;
+	wl_array_for_each(state_elem, state) {
+		if (*state_elem == ZWLR_FOREIGN_TOPLEVEL_HANDLE_V1_STATE_ACTIVATED) {
+			/* Found new active toplevel */
+			labline_state->active_toplevel = this_toplevel;
+			activated = true;
+			break;
+		}
+	}
+
+	if (!activated && labline_state->active_toplevel == this_toplevel) {
+		/* Previously active toplevel became inactive */
+		labline_state->active_toplevel = NULL;
+	}
+}
+
+void toplevel_handle_done() {}
+
+void toplevel_handle_closed() {}
+
+void toplevel_handle_parent() {}
+
+static const struct zwlr_foreign_toplevel_handle_v1_listener
+toplevel_handle_listener = {
+	.title = toplevel_handle_title,
+	.app_id = toplevel_handle_app_id,
+	.output_enter = toplevel_handle_output_enter,
+	.output_leave = toplevel_handle_output_leave,
+	.state = toplevel_handle_state,
+	.done = toplevel_handle_done,
+	.closed = toplevel_handle_closed,
+	.parent = toplevel_handle_parent
+};
+
 static void
 toplevel_manager_toplevel(void *data,
-		struct zwlr_foreign_toplevel_manager_v1 *zwlr_foreign_toplevel_manager_v1,
-		struct zwlr_foreign_toplevel_handle_v1 *toplevel)
+		struct zwlr_foreign_toplevel_manager_v1 *manager,
+		struct zwlr_foreign_toplevel_handle_v1 *handle)
 {
+	struct labline_state *state = data;
+	struct toplevel *new_toplevel = calloc(1, sizeof(struct toplevel));
+	new_toplevel->handle = handle;
+
+	struct toplevel_callback_data *callback_data =
+		calloc(1, sizeof(struct toplevel_callback_data));
+	callback_data->toplevel = new_toplevel;
+	callback_data->state = state;
+
+	zwlr_foreign_toplevel_handle_v1_add_listener(handle,
+		&toplevel_handle_listener, callback_data);
 }
 
 static void
-toplevel_manager_finished(void *data,
-		struct zwlr_foreign_toplevel_manager_v1 *zwlr_foreign_toplevel_manager_v1)
+toplevel_manager_finished()
 {
-
+	/* TODO: implement this */
 }
 
 static const struct zwlr_foreign_toplevel_manager_v1_listener
@@ -262,12 +331,16 @@ wayland_init(struct labline_state *state)
 	ext_workspace_manager_v1_add_listener(state->workspace_manager,
 		&workspace_manager_listener, state);
 
+	wl_list_init(&state->workspaces);
+
 	/* Toplevel manager */
 	if (!state->toplevel_manager) {
 		die("Toplevel manager not supported by the compositor");
 	}
 	zwlr_foreign_toplevel_manager_v1_add_listener(state->toplevel_manager,
 		&toplevel_manager_listener, state);
+
+	state->active_toplevel = NULL;
 
 	wl_display_roundtrip(state->display);
 	wl_surface_commit(state->surface);

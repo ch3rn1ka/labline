@@ -44,17 +44,22 @@ state_set_default_values(struct labline_state *state)
 		.active_ws = {
 			.bg = {1.0f, 1.0f, 1.0f},
 			.fg = {0.0f, 0.0f, 0.0f},
-			.br = {1.0f, 1.0f, 1.0f},
+			.br = {1.0f, 1.0f, 1.0f}
 		},
 		.inactive_ws = {
 			.bg = {0.1f, 0.1f, 0.1f},
 			.fg = {1.0f, 1.0f, 1.0f},
-			.br = {0.0f, 0.0f, 0.0f},
+			.br = {0.0f, 0.0f, 0.0f}
 		},
 		.urgent_ws = {
 			.bg = {1.0f, 0.0f, 0.0f},
 			.fg = {0.0f, 0.0f, 0.0f},
 			.br = {1.0f, 0.0f, 0.0f}
+		},
+		.toplevel = {
+			.bg = {1.0f, 1.0f, 1.0f},
+			.fg = {0.0f, 0.0f, 0.0f},
+			.br = {1.0f, 1.0f, 1.0f}
 		}
 	};
 
@@ -127,7 +132,7 @@ parse_args(struct labline_state *state, int argc, char **argv)
 	int option;
 	while ((option = getopt_long(argc, argv, "a:f:",
 			long_options, NULL)) != -1) {
-		switch (option) {
+		switch(option) {
 			case 'a': {
 				uint32_t sides =
 					ZWLR_LAYER_SURFACE_V1_ANCHOR_LEFT
@@ -171,7 +176,6 @@ state_init(int argc, char **argv)
 	state->font_height = get_font_height(state->font);
 	state->height = state->font_height + 10;
 
-	wl_list_init(&state->workspaces);
 	buffers_init(state);
 	wayland_init(state);
 
