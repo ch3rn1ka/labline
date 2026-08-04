@@ -19,6 +19,16 @@ struct workspace_callback_data {
 	struct workspace *workspace;
 };
 
+struct toplevel {
+	struct zwlr_foreign_toplevel_handle_v1 *handle;
+	char *title;
+};
+
+struct toplevel_callback_data {
+	struct labline_state *state;
+	struct toplevel *toplevel;
+};
+
 void wayland_buffer_add_listener(struct buffer_context *buf_ctx);
 
 void wayland_init(struct labline_state *state);

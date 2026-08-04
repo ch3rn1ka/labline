@@ -22,6 +22,7 @@ struct faces {
 	struct face active_ws;
 	struct face inactive_ws;
 	struct face urgent_ws;
+	struct face toplevel;
 };
 
 struct labline_state
@@ -37,6 +38,7 @@ struct labline_state
 	struct ext_workspace_manager_v1 *workspace_manager;
 
 	struct wl_list workspaces;
+	struct toplevel *active_toplevel;
 
 	/* Swap between two buffers to draw the panel */
 	struct buffer_context *buffers[2];

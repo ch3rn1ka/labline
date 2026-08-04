@@ -10,7 +10,7 @@
 #include "shm.h"
 #include "wayland.h"
 
-static void
+static int
 draw_workspaces(struct buffer_context *buf_ctx, struct labline_state *state)
 {
 	pango_layout_set_width(buf_ctx->pango_layout, -1);
@@ -36,7 +36,6 @@ draw_workspaces(struct buffer_context *buf_ctx, struct labline_state *state)
 			&ws_name_width, &ws_name_height);
 
 		int box_width = ws_name_width + 8;
-
 		cairo_rectangle(buf_ctx->cairo_ctx, x_offset, 0,
 			box_width, state->height);
 		cairo_fill(buf_ctx->cairo_ctx);
@@ -54,20 +53,53 @@ draw_workspaces(struct buffer_context *buf_ctx, struct labline_state *state)
 	}
 	pango_layout_set_width(buf_ctx->pango_layout,
 		state->width * PANGO_SCALE);
+
+	return x_offset;
 }
 
-static void
-draw_windows(struct buffer_context *buf_ctx, struct labline_state *state)
+static int
+draw_windows(struct buffer_context *buf_ctx, struct labline_state *state,
+		int workspaces_offset)
 {
-	/*
-	 * TODO: figure out how to approach this. Maybe qutebrowser-like tabs
-	 * could work? Can a window be activated with a request? Can i catch
-	 * urgent windows somehow?
-	 */
+	if (!state->active_toplevel) {
+		return 0;
+	}
+
+	struct face *toplevel = &state->faces.toplevel;
+
+	/* TODO: macro for passing rgb more easily */
+	cairo_set_source_rgb(buf_ctx->cairo_ctx,
+		toplevel->bg.r,
+		toplevel->bg.g,
+		toplevel->bg.b);
+
+	int toplevel_title_width, toplevel_title_height;
+
+	/* TODO: change wrapping limit */
+	pango_layout_set_text(buf_ctx->pango_layout, state->active_toplevel->title, -1);
+	pango_layout_get_pixel_size(buf_ctx->pango_layout,
+		&toplevel_title_width, &toplevel_title_height);
+
+	int box_width = toplevel_title_width + 8;
+	cairo_rectangle(buf_ctx->cairo_ctx, workspaces_offset, 0,
+		box_width, state->height);
+	cairo_fill(buf_ctx->cairo_ctx);
+
+	cairo_set_source_rgb(buf_ctx->cairo_ctx,
+		toplevel->fg.r,
+		toplevel->fg.g,
+		toplevel->fg.b);
+	cairo_move_to(buf_ctx->cairo_ctx, workspaces_offset + 4,
+		(state->height - toplevel_title_height) / 2.0);
+	pango_cairo_show_layout(buf_ctx->cairo_ctx,
+		buf_ctx->pango_layout);
+
+	return workspaces_offset + box_width;
 }
 
 static void
-draw_status(struct buffer_context *buf_ctx, struct labline_state *state)
+draw_status(struct buffer_context *buf_ctx, struct labline_state *state,
+		uint32_t windows_offset)
 {
 	pango_layout_set_text(buf_ctx->pango_layout, state->statusline, -1);
 
@@ -95,9 +127,9 @@ draw_panel(struct buffer_context *buf_ctx, struct labline_state *state)
 		state->faces.status.bg.b);
 	cairo_paint(buf_ctx->cairo_ctx);
 
-	draw_workspaces(buf_ctx, state);
-	draw_windows(buf_ctx, state);
-	draw_status(buf_ctx, state);
+	int workspaces_offset = draw_workspaces(buf_ctx, state);
+	int windows_offset = draw_windows(buf_ctx, state, workspaces_offset);
+	draw_status(buf_ctx, state, windows_offset);
 
 	cairo_surface_flush(buf_ctx->cairo_surface);
 }
@@ -106,6 +138,11 @@ draw_panel(struct buffer_context *buf_ctx, struct labline_state *state)
 void
 render(struct labline_state *state)
 {
+	if (state->width == 0) {
+		/* The surface is not initialized */
+		return;
+	}
+
 	for (int i = 0; i < 2; ++i) {
 		struct buffer_context *buf_ctx = state->buffers[i];
 
