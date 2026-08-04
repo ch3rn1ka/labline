@@ -8,6 +8,7 @@
 #include "buffer.h"
 #include "state.h"
 #include "shm.h"
+#include "util.h"
 #include "wayland.h"
 
 static int

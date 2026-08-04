@@ -42,8 +42,13 @@ main(int argc, char **argv)
 				if (state->statusline[length - 1] == '\n') {
 					state->statusline[length - 1] = '\0';
 				}
-				render(state);
+				state->needs_render = true;
 			}
+		}
+
+		if (state->needs_render) {
+			render(state);
+			state->needs_render = false;
 		}
 	}
 

@@ -179,5 +179,6 @@ state_init(int argc, char **argv)
 	buffers_init(state);
 	wayland_init(state);
 
+	state->needs_render = true;
 	return state;
 }
