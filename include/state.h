@@ -41,8 +41,7 @@ struct labline_state
 	struct wl_list workspaces;
 	struct toplevel *active_toplevel;
 
-	/* Swap between two buffers to draw the panel */
-	struct buffer_context *buffers[2];
+	struct buffer_context *buffer;
 	char statusline[BUFSIZ];
 
 	struct faces faces;
@@ -50,10 +49,10 @@ struct labline_state
 	char *font;
 	int font_height;
 
+	bool needs_render;
+
 	uint32_t width, height, stride;
 	int anchor;
-
-	bool needs_render;
 };
 
 struct labline_state *state_init(int argc, char **argv);
