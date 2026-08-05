@@ -19,6 +19,11 @@ main(int argc, char **argv)
 	fds[1].events = POLLIN;
 
 	while (true) {
+		if (state->needs_render) {
+			render(state);
+			state->needs_render = false;
+		}
+
 		while (wl_display_prepare_read(state->display) != 0) {
 			wl_display_dispatch_pending(state->display);
 		}
@@ -44,11 +49,6 @@ main(int argc, char **argv)
 				}
 				state->needs_render = true;
 			}
-		}
-
-		if (state->needs_render) {
-			render(state);
-			state->needs_render = false;
 		}
 	}
 
