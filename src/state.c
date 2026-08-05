@@ -36,30 +36,15 @@ static void
 state_set_default_values(struct labline_state *state)
 {
 	state->faces = (struct faces) {
-		.status = {
-			.bg = {0.0f, 0.0f, 0.0f},
-			.fg = {1.0f, 1.0f, 1.0f},
-			.br = {0.0f, 0.0f, 0.0f}
-		},
-		.active_ws = {
+		.primary = {
 			.bg = {1.0f, 1.0f, 1.0f},
 			.fg = {0.0f, 0.0f, 0.0f},
 			.br = {1.0f, 1.0f, 1.0f}
 		},
-		.inactive_ws = {
+		.secondary = {
 			.bg = {0.1f, 0.1f, 0.1f},
 			.fg = {1.0f, 1.0f, 1.0f},
 			.br = {0.0f, 0.0f, 0.0f}
-		},
-		.urgent_ws = {
-			.bg = {1.0f, 0.0f, 0.0f},
-			.fg = {0.0f, 0.0f, 0.0f},
-			.br = {1.0f, 0.0f, 0.0f}
-		},
-		.toplevel = {
-			.bg = {1.0f, 1.0f, 1.0f},
-			.fg = {0.0f, 0.0f, 0.0f},
-			.br = {1.0f, 1.0f, 1.0f}
 		}
 	};
 
@@ -69,6 +54,9 @@ state_set_default_values(struct labline_state *state)
 	state->anchor = ZWLR_LAYER_SURFACE_V1_ANCHOR_BOTTOM
 		| ZWLR_LAYER_SURFACE_V1_ANCHOR_LEFT
 		| ZWLR_LAYER_SURFACE_V1_ANCHOR_RIGHT;
+
+	state->needs_render = true;
+	state->statusline[0] = '\0';
 }
 
 static bool
@@ -115,19 +103,10 @@ parse_args(struct labline_state *state, int argc, char **argv)
 	const struct option long_options[] = {
 		{"anchor", required_argument, NULL, 'a'},
 		{"font", required_argument, NULL, 'f'},
-		{"sbg", required_argument, NULL, 1},
-		{"sfg", required_argument, NULL, 2},
-		{"awsbg", required_argument, NULL, 3},
-		{"awsfg", required_argument, NULL, 4},
-		{"awsbr", required_argument, NULL, 5},
-		{"iwsbg", required_argument, NULL, 6},
-		{"iwsfg", required_argument, NULL, 7},
-		{"iwsbr", required_argument, NULL, 8},
-		{"uwsbg", required_argument, NULL, 9},
-		{"uwsfg", required_argument, NULL, 10},
-		{"uwsbr", required_argument, NULL, 11},
-		{"tbg", required_argument, NULL, 12},
-		{"tfg", required_argument, NULL, 13},
+		{"pbg", required_argument, NULL, 1},
+		{"bfg", required_argument, NULL, 2},
+		{"sbg", required_argument, NULL, 3},
+		{"sfg", required_argument, NULL, 4},
 		{0, 0, 0, 0}
 	};
 
@@ -157,19 +136,10 @@ parse_args(struct labline_state *state, int argc, char **argv)
 				break;
 			}
 
-			case 1: state->faces.status.bg      = hex_to_rgb(optarg); break;
-			case 2: state->faces.status.fg      = hex_to_rgb(optarg); break;
-			case 3: state->faces.active_ws.bg   = hex_to_rgb(optarg); break;
-			case 4: state->faces.active_ws.fg   = hex_to_rgb(optarg); break;
-			case 5: state->faces.active_ws.br   = hex_to_rgb(optarg); break;
-			case 6: state->faces.inactive_ws.bg = hex_to_rgb(optarg); break;
-			case 7: state->faces.inactive_ws.fg = hex_to_rgb(optarg); break;
-			case 8: state->faces.inactive_ws.br = hex_to_rgb(optarg); break;
-			case 9: state->faces.urgent_ws.bg   = hex_to_rgb(optarg); break;
-			case 10: state->faces.urgent_ws.fg  = hex_to_rgb(optarg); break;
-			case 11: state->faces.urgent_ws.br  = hex_to_rgb(optarg); break;
-			case 12: state->faces.toplevel.bg   = hex_to_rgb(optarg); break;
-			case 13: state->faces.toplevel.fg   = hex_to_rgb(optarg); break;
+			case 1: state->faces.primary.bg   = hex_to_rgb(optarg); break;
+			case 2: state->faces.primary.fg   = hex_to_rgb(optarg); break;
+			case 3: state->faces.secondary.bg = hex_to_rgb(optarg); break;
+			case 4: state->faces.secondary.fg = hex_to_rgb(optarg); break;
 			case '?': break;
 		}
 	}
@@ -189,6 +159,5 @@ state_init(int argc, char **argv)
 	buffer_init(state);
 	wayland_init(state);
 
-	state->needs_render = true;
 	return state;
 }
