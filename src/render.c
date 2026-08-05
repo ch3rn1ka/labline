@@ -139,8 +139,6 @@ draw_panel(struct buffer_context *buf_ctx, struct labline_state *state)
 void
 render(struct labline_state *state)
 {
-	/* DEBUG("Triggered render with buffers:\n1. %d\n2. %d", */
-	/* 	state->buffers[0]->busy, state->buffers[1]->busy); */
 	if (state->width == 0) {
 		/* The surface is not initialized */
 		return;
