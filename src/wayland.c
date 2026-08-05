@@ -220,6 +220,7 @@ void toplevel_handle_state(void *data,
 			/* case ZWLR_FOREIGN_TOPLEVEL_HANDLE_V1_STATE_MINIMIZED: */
 			/* case ZWLR_FOREIGN_TOPLEVEL_HANDLE_V1_STATE_MAXIMIZED: */
 			/* case ZWLR_FOREIGN_TOPLEVEL_HANDLE_V1_STATE_FULLSCREEN: */
+			/* 	break; */
 			case ZWLR_FOREIGN_TOPLEVEL_HANDLE_V1_STATE_ACTIVATED:
 				labline_state->active_toplevel = this_toplevel;
 				activated = true;
@@ -229,9 +230,10 @@ void toplevel_handle_state(void *data,
 
 	if (!activated && labline_state->active_toplevel == this_toplevel) {
 		/* Previously active toplevel became inactive */
-		labline_state->needs_render = true;
 		labline_state->active_toplevel = NULL;
 	}
+
+	labline_state->needs_render = true;
 }
 
 void toplevel_handle_done() {}

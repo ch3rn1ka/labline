@@ -6,6 +6,8 @@
 #include <stdio.h>
 #include <wayland-client.h>
 
+#define LABLINE_VERSION "labline 0.1"
+
 struct rgb {
 	float r;
 	float g;
@@ -19,11 +21,10 @@ struct face {
 };
 
 struct faces {
-	struct face status;
-	struct face active_ws;
-	struct face inactive_ws;
-	struct face urgent_ws;
-	struct face toplevel;
+	/* Accented sections: active workspace & toplevel */
+	struct face primary;
+	/* Dim sections: inactive workspaces & statusline */
+	struct face secondary;
 };
 
 struct labline_state
