@@ -37,13 +37,13 @@ state_set_default_values(struct labline_state *state)
 {
 	state->faces = (struct faces) {
 		.primary = {
-			.bg = {1.0f, 1.0f, 1.0f},
+			.bg = {0.88f, 0.87f, 0.86f},
 			.fg = {0.0f, 0.0f, 0.0f},
 			.br = {1.0f, 1.0f, 1.0f}
 		},
 		.secondary = {
-			.bg = {0.1f, 0.1f, 0.1f},
-			.fg = {1.0f, 1.0f, 1.0f},
+			.bg = {0.96f, 0.96f, 0.96f},
+			.fg = {0.0f, 0.0f, 0.0f},
 			.br = {0.0f, 0.0f, 0.0f}
 		}
 	};
