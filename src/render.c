@@ -139,27 +139,26 @@ draw_panel(struct buffer_context *buf_ctx, struct labline_state *state)
 void
 render(struct labline_state *state)
 {
+	/* DEBUG("Triggered render with buffers:\n1. %d\n2. %d", */
+	/* 	state->buffers[0]->busy, state->buffers[1]->busy); */
 	if (state->width == 0) {
 		/* The surface is not initialized */
 		return;
 	}
 
-	for (int i = 0; i < 2; ++i) {
-		struct buffer_context *buf_ctx = state->buffers[i];
+	struct buffer_context *buf_ctx = state->buffer;
 
-		if (!buf_ctx->busy) {
-			if (buf_ctx->stale) {
-				buffer_realloc(buf_ctx, state);
-				wayland_buffer_add_listener(buf_ctx);
-			}
-			draw_panel(buf_ctx, state);
-			wl_surface_attach(state->surface, buf_ctx->wl_buffer,
-				0, 0);
-			wl_surface_damage_buffer(state->surface, 0, 0,
-				state->width, state->height);
-			wl_surface_commit(state->surface);
-			buf_ctx->busy = true;
-			break;
+	if (!buf_ctx->busy) {
+		if (buf_ctx->stale) {
+			buffer_realloc(buf_ctx, state);
+			wayland_buffer_add_listener(buf_ctx);
 		}
+		draw_panel(buf_ctx, state);
+		wl_surface_attach(state->surface, buf_ctx->wl_buffer,
+			0, 0);
+		wl_surface_damage_buffer(state->surface, 0, 0,
+			state->width, state->height);
+		wl_surface_commit(state->surface);
+		buf_ctx->busy = true;
 	}
 }

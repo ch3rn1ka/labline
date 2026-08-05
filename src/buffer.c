@@ -11,17 +11,11 @@
 #include "state.h"
 #include "util.h"
 
-/*
- * Allocate two `buffer_context` structs and mark them as stale so that their
- * fields will get allocated during the next `prepare_buffer()` call.
- */
 void
-buffers_init(struct labline_state *state)
+buffer_init(struct labline_state *state)
 {
-	for (int i = 0; i < 2; i++) {
-		state->buffers[i] = calloc(1, sizeof(struct buffer_context));
-		state->buffers[i]->stale = true;
-	}
+	state->buffer = calloc(1, sizeof(struct buffer_context));
+	state->buffer->stale = true;
 }
 
 /*

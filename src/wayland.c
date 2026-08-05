@@ -166,8 +166,7 @@ layer_surface_configure(void *data, struct zwlr_layer_surface_v1 *layer_surface,
 		state->stride = width * 4;
 		state->height = height;
 
-		state->buffers[0]->stale = true;
-		state->buffers[1]->stale = true;
+		state->buffer->stale = true;
 	}
 
 	zwlr_layer_surface_v1_ack_configure(layer_surface, serial);
@@ -217,20 +216,22 @@ void toplevel_handle_state(void *data,
 	bool activated = false;
 	uint32_t *state_elem;
 	wl_array_for_each(state_elem, state) {
-		if (*state_elem == ZWLR_FOREIGN_TOPLEVEL_HANDLE_V1_STATE_ACTIVATED) {
-			/* Found new active toplevel */
-			labline_state->active_toplevel = this_toplevel;
-			activated = true;
-			break;
+		switch(*state_elem) {
+			/* case ZWLR_FOREIGN_TOPLEVEL_HANDLE_V1_STATE_MINIMIZED: */
+			/* case ZWLR_FOREIGN_TOPLEVEL_HANDLE_V1_STATE_MAXIMIZED: */
+			/* case ZWLR_FOREIGN_TOPLEVEL_HANDLE_V1_STATE_FULLSCREEN: */
+			case ZWLR_FOREIGN_TOPLEVEL_HANDLE_V1_STATE_ACTIVATED:
+				labline_state->active_toplevel = this_toplevel;
+				activated = true;
+				break;
 		}
 	}
 
 	if (!activated && labline_state->active_toplevel == this_toplevel) {
 		/* Previously active toplevel became inactive */
+		labline_state->needs_render = true;
 		labline_state->active_toplevel = NULL;
 	}
-
-	labline_state->needs_render = true;
 }
 
 void toplevel_handle_done() {}

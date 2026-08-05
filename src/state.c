@@ -176,7 +176,7 @@ state_init(int argc, char **argv)
 	state->font_height = get_font_height(state->font);
 	state->height = state->font_height + 10;
 
-	buffers_init(state);
+	buffer_init(state);
 	wayland_init(state);
 
 	state->needs_render = true;
