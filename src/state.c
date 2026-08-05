@@ -126,6 +126,8 @@ parse_args(struct labline_state *state, int argc, char **argv)
 		{"uwsbg", required_argument, NULL, 9},
 		{"uwsfg", required_argument, NULL, 10},
 		{"uwsbr", required_argument, NULL, 11},
+		{"tbg", required_argument, NULL, 12},
+		{"tfg", required_argument, NULL, 13},
 		{0, 0, 0, 0}
 	};
 
@@ -148,18 +150,26 @@ parse_args(struct labline_state *state, int argc, char **argv)
 				}
 				break;
 			}
-			case 'f': state->font = optarg; break;
-			case 1: state->faces.status.bg = hex_to_rgb(optarg); break;
-			case 2: state->faces.status.fg = hex_to_rgb(optarg); break;
-			case 3: state->faces.active_ws.bg = hex_to_rgb(optarg); break;
-			case 4: state->faces.active_ws.fg = hex_to_rgb(optarg); break;
-			case 5: state->faces.active_ws.br = hex_to_rgb(optarg); break;
+
+			case 'f': {
+				/* TODO: check if optarg is a valid font */
+				state->font = optarg;
+				break;
+			}
+
+			case 1: state->faces.status.bg      = hex_to_rgb(optarg); break;
+			case 2: state->faces.status.fg      = hex_to_rgb(optarg); break;
+			case 3: state->faces.active_ws.bg   = hex_to_rgb(optarg); break;
+			case 4: state->faces.active_ws.fg   = hex_to_rgb(optarg); break;
+			case 5: state->faces.active_ws.br   = hex_to_rgb(optarg); break;
 			case 6: state->faces.inactive_ws.bg = hex_to_rgb(optarg); break;
 			case 7: state->faces.inactive_ws.fg = hex_to_rgb(optarg); break;
 			case 8: state->faces.inactive_ws.br = hex_to_rgb(optarg); break;
-			case 9: state->faces.urgent_ws.bg = hex_to_rgb(optarg); break;
-			case 10: state->faces.urgent_ws.fg = hex_to_rgb(optarg); break;
-			case 11: state->faces.urgent_ws.br = hex_to_rgb(optarg); break;
+			case 9: state->faces.urgent_ws.bg   = hex_to_rgb(optarg); break;
+			case 10: state->faces.urgent_ws.fg  = hex_to_rgb(optarg); break;
+			case 11: state->faces.urgent_ws.br  = hex_to_rgb(optarg); break;
+			case 12: state->faces.toplevel.bg   = hex_to_rgb(optarg); break;
+			case 13: state->faces.toplevel.fg   = hex_to_rgb(optarg); break;
 			case '?': break;
 		}
 	}
