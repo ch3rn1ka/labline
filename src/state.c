@@ -104,7 +104,7 @@ parse_args(struct labline_state *state, int argc, char **argv)
 		{"anchor", required_argument, NULL, 'a'},
 		{"font", required_argument, NULL, 'f'},
 		{"pbg", required_argument, NULL, 1},
-		{"bfg", required_argument, NULL, 2},
+		{"pfg", required_argument, NULL, 2},
 		{"sbg", required_argument, NULL, 3},
 		{"sfg", required_argument, NULL, 4},
 		{0, 0, 0, 0}
