@@ -79,15 +79,19 @@ workspace_handle_name(void *data, struct ext_workspace_handle_v1 *handle,
 }
 
 static void
-workspace_handle_state(void *data,
-		struct ext_workspace_handle_v1 *handle,
+workspace_handle_state(void *data, struct ext_workspace_handle_v1 *handle,
 		uint32_t workspace_state)
 {
 	struct workspace_callback_data *callback_data = data;
 	struct workspace *workspace = callback_data->workspace;
 	workspace->state = workspace_state;
 
-	callback_data->state->needs_render = true;
+	/*
+	 * Disambiguation: "state" as in "program state" vs. the "state" event
+	 * for ws handles
+	 */
+	struct labline_state *labline_state = callback_data->state;
+	labline_state->needs_render = true;
 }
 
 static void
@@ -100,9 +104,13 @@ static void
 workspace_handle_capabilities() {}
 
 static void
-workspace_handle_removed()
+workspace_handle_removed(void *data, struct ext_workspace_handle_v1 *handle)
 {
-	/* TODO: implement remove logic */
+	struct workspace_callback_data *callback_data = data;
+	struct workspace *workspace = callback_data->workspace;
+
+	wl_list_remove(&workspace->node);
+	ext_workspace_handle_v1_destroy(handle);
 }
 
 static const struct ext_workspace_handle_v1_listener
