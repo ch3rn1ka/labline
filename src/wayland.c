@@ -192,7 +192,8 @@ static const struct zwlr_layer_surface_v1_listener layer_surface_listener = {
 	.closed = layer_surface_closed
 };
 
-void toplevel_handle_title(void *data,
+static void
+toplevel_handle_title(void *data,
 		struct zwlr_foreign_toplevel_handle_v1 *handle,
 		const char *title)
 {
@@ -207,13 +208,13 @@ void toplevel_handle_title(void *data,
 	callback_data->state->needs_render = true;
 }
 
-void toplevel_handle_app_id() {}
+static void toplevel_handle_app_id() {}
 
-void toplevel_handle_output_enter() {}
+static void toplevel_handle_output_enter() {}
 
-void toplevel_handle_output_leave() {}
+static void toplevel_handle_output_leave() {}
 
-void toplevel_handle_state(void *data,
+static void toplevel_handle_state(void *data,
 		struct zwlr_foreign_toplevel_handle_v1 *handle,
 		struct wl_array *state)
 {
@@ -244,11 +245,11 @@ void toplevel_handle_state(void *data,
 	labline_state->needs_render = true;
 }
 
-void toplevel_handle_done() {}
+static void toplevel_handle_done() {}
 
-void toplevel_handle_closed() {}
+static void toplevel_handle_closed() {}
 
-void toplevel_handle_parent() {}
+static void toplevel_handle_parent() {}
 
 static const struct zwlr_foreign_toplevel_handle_v1_listener
 toplevel_handle_listener = {
