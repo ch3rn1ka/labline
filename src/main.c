@@ -34,11 +34,24 @@ main(int argc, char **argv)
 			break;
 		}
 
+		if (fds[1].revents & (POLLHUP | POLLERR)) {
+			wl_display_cancel_read(state->display);
+			break;
+		}
+
 		if (fds[1].revents & POLLIN) {
-			wl_display_read_events(state->display);
-			wl_display_dispatch_pending(state->display);
+			if (wl_display_read_events(state->display) == -1) {
+				break;
+			}
+			if (wl_display_dispatch_pending(state->display) == -1) {
+				break;
+			}
 		} else {
 			wl_display_cancel_read(state->display);
+		}
+
+		if (fds[0].revents & (POLLHUP | POLLERR)) {
+			break;
 		}
 
 		if (fds[0].revents & POLLIN) {
@@ -48,6 +61,8 @@ main(int argc, char **argv)
 					state->statusline[length - 1] = '\0';
 				}
 				state->needs_render = true;
+			} else {
+				break;
 			}
 		}
 	}
