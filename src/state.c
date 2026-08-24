@@ -16,6 +16,8 @@
 #include "ext-workspace-v1-client-protocol.h"
 #include "wlr-layer-shell-unstable-v1-client-protocol.h"
 
+static char *help_message = "Usage: TODO\n";
+
 static int
 get_font_height(const char *fontname)
 {
@@ -101,19 +103,24 @@ static void
 parse_args(struct labline_state *state, int argc, char **argv)
 {
 	const struct option long_options[] = {
+		{"help",   no_argument,       NULL, 'h'},
 		{"anchor", required_argument, NULL, 'a'},
-		{"font", required_argument, NULL, 'f'},
-		{"pbg", required_argument, NULL, 1},
-		{"pfg", required_argument, NULL, 2},
-		{"sbg", required_argument, NULL, 3},
-		{"sfg", required_argument, NULL, 4},
+		{"font",   required_argument, NULL, 'f'},
+		{"pbg",    required_argument, NULL, 1},
+		{"pfg",    required_argument, NULL, 2},
+		{"sbg",    required_argument, NULL, 3},
+		{"sfg",    required_argument, NULL, 4},
 		{0, 0, 0, 0}
 	};
 
 	int option;
-	while ((option = getopt_long(argc, argv, "a:f:",
+	while ((option = getopt_long(argc, argv, "ha:f:",
 			long_options, NULL)) != -1) {
 		switch(option) {
+			case 'h':
+				printf("%s", help_message);
+				exit(EXIT_SUCCESS);
+
 			case 'a': {
 				uint32_t sides =
 					ZWLR_LAYER_SURFACE_V1_ANCHOR_LEFT
@@ -130,11 +137,10 @@ parse_args(struct labline_state *state, int argc, char **argv)
 				break;
 			}
 
-			case 'f': {
+			case 'f':
 				/* TODO: check if optarg is a valid font */
 				state->font = optarg;
 				break;
-			}
 
 			case 1: state->faces.primary.bg   = hex_to_rgb(optarg); break;
 			case 2: state->faces.primary.fg   = hex_to_rgb(optarg); break;
@@ -154,7 +160,7 @@ state_init(int argc, char **argv)
 	parse_args(state, argc, argv);
 
 	state->font_height = get_font_height(state->font);
-	state->height = state->font_height + 10;
+	state->height = state->font_height + 2 * PADDING;
 
 	buffer_init(state);
 	wayland_init(state);
