@@ -1,9 +1,21 @@
 # labline
 
-Labline is a status panel for Labwc, similar to that of dwm or i3.
-Compile it with `make`, pipe some text into it, and you're good to go!
+labline is a status panel for labwc, similar to that of dwm or i3.
+Compile it with `make`, pipe some text into it, and you're good to go.
+
+## Dependencies
+* wayland-client
+* pango
+* cairo
+* make *(compile-time)*
+
+```
+# pacman -S wayland pango cairo make
+```
 
 ## Command line options
+* -h, --help</br>
+  print the help message and exit
 * -a, --anchor [top/bottom]</br>
   anchor the bar to the top/bottom (default is "bottom")
 * -f, --font [fontname]</br>
