@@ -153,7 +153,7 @@ draw_window(struct buffer_context *buf_ctx, struct labline_state *state,
 }
 
 /* Draw the contents of the statusline with pango and cairo. */
-void
+static void
 draw_panel(struct buffer_context *buf_ctx, struct labline_state *state)
 {
 	int workspaces_offset = draw_workspaces(buf_ctx, state);

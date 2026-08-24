@@ -12,8 +12,6 @@
 
 #define PADDING 4
 
-void draw_panel(struct buffer_context *buf_ctx, struct labline_state *state);
-
 void render(struct labline_state *state);
 
 #endif	/* RENDER_H */
