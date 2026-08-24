@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: GPL-2.0-only */
 #ifndef WAYLAND_H
 #define WAYLAND_H
 

@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: GPL-2.0-only */
 #include <cairo/cairo.h>
 #include <pango/pangocairo.h>
 #include <stdio.h>
