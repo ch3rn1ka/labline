@@ -144,7 +144,7 @@ workspace_manager_workspace(void *data,
 
 /*
  * We don't need to track workspace groups since there's only one in Labwc.
- * Will probably need to do it anyway for compatibility with other compositors.
+ * Will probably need to do it anyway for compatibility with other compositors
  */
 static void
 workspace_manager_group() {}
@@ -229,7 +229,7 @@ static void toplevel_handle_state(void *data,
 			/* case ZWLR_FOREIGN_TOPLEVEL_HANDLE_V1_STATE_MINIMIZED: */
 			/* case ZWLR_FOREIGN_TOPLEVEL_HANDLE_V1_STATE_MAXIMIZED: */
 			/* case ZWLR_FOREIGN_TOPLEVEL_HANDLE_V1_STATE_FULLSCREEN: */
-			/* 	break; */
+			/*	break; */
 			case ZWLR_FOREIGN_TOPLEVEL_HANDLE_V1_STATE_ACTIVATED:
 				labline_state->active_toplevel = this_toplevel;
 				activated = true;
