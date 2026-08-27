@@ -4,18 +4,32 @@ labline is a status panel for labwc, similar to that of dwm or i3.
 Compile it with `make`, pipe some text into it, and you're good to go.
 Works well with other wlroots compositors that have static workspaces.
 
-## Dependencies
-* wayland-client
+## Installation
+
+### Compiling from source
+
+Install dependencies:
+
+* make *
+* a C11 compiler *
+* wayland
+* wayland-protocols
+* wlr-protocols
 * pango
 * cairo
-* make *(compile-time)*
-* a C11 compiler *(compile-time)*
+* scdoc (optional: manpages) *
+* git (optional: version info) *
 
+*\* Compile-time dep*
+
+Run these commands:
 ```
-# pacman -S wayland pango cairo base-devel
+make
+sudo make install
 ```
 
 ## Command line options
+
 * **-h**, **--help**</br>
   print the help message and exit
 * **-a**, **--anchor** [top/bottom]</br>
@@ -26,3 +40,10 @@ Works well with other wlroots compositors that have static workspaces.
   define colors for the accented sections of the panel (primary colors)
 * **--sbg**/**--sfg** [HEX]</br>
   define colors for the dim sections of the panel (secondary colors)
+
+## Running
+
+A simple example with piped input:
+```sh
+while sleep 1; do date; done | labline &
+```
