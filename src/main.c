@@ -7,6 +7,7 @@
 
 #include "render.h"
 #include "shm.h"
+#include "util.h"
 
 int
 main(int argc, char **argv)
@@ -26,33 +27,37 @@ main(int argc, char **argv)
 		}
 
 		while (wl_display_prepare_read(state->display) != 0) {
-			wl_display_dispatch_pending(state->display);
+			if (wl_display_dispatch_pending(state->display) == -1) {
+				goto clean_up;
+			};
 		}
 		wl_display_flush(state->display);
 
 		if (poll(fds, 2, -1) <= 0) {
 			wl_display_cancel_read(state->display);
-			break;
+			goto clean_up;
 		}
 
+		/* Events from the Wayland fd */
 		if (fds[1].revents & (POLLHUP | POLLERR)) {
 			wl_display_cancel_read(state->display);
-			break;
+			goto clean_up;
 		}
 
 		if (fds[1].revents & POLLIN) {
 			if (wl_display_read_events(state->display) == -1) {
-				break;
+				goto clean_up;
 			}
 			if (wl_display_dispatch_pending(state->display) == -1) {
-				break;
+				goto clean_up;
 			}
 		} else {
 			wl_display_cancel_read(state->display);
 		}
 
-		if (fds[0].revents & (POLLHUP | POLLERR)) {
-			break;
+		/* Input from stdin */
+		if (fds[0].revents & POLLERR) {
+			goto clean_up;
 		}
 
 		if (fds[0].revents & POLLIN) {
@@ -63,10 +68,11 @@ main(int argc, char **argv)
 				}
 				state->needs_render = true;
 			} else {
-				break;
+				goto clean_up;
 			}
 		}
 	}
 
+clean_up:
 	return 0;
 }
