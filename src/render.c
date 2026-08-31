@@ -143,7 +143,6 @@ draw_window(struct buffer_context *buf_ctx, struct labline_state *state,
 	pango_cairo_show_layout(buf_ctx->cairo_ctx, buf_ctx->pango_layout);
 }
 
-/* Draw the contents of the statusline with pango and cairo. */
 static void
 draw_panel(struct buffer_context *buf_ctx, struct labline_state *state)
 {
@@ -154,7 +153,6 @@ draw_panel(struct buffer_context *buf_ctx, struct labline_state *state)
 	cairo_surface_flush(buf_ctx->cairo_surface);
 }
 
-/* Choose a buffer and draw in it, attach and commit */
 void
 render(struct labline_state *state)
 {
