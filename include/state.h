@@ -7,7 +7,8 @@
 #include <stdio.h>
 #include <wayland-client.h>
 
-#define LABLINE_VERSION "labline 0.1"
+#define BG(face) (face).bg.r, (face).bg.g, (face).bg.b
+#define FG(face) (face).fg.r, (face).fg.g, (face).fg.b
 
 struct rgb {
 	float r;

@@ -21,7 +21,7 @@ draw_workspaces(struct buffer_context *buf_ctx, struct labline_state *state)
 	pango_layout_set_width(buf_ctx->pango_layout, -1);
 
 	struct workspace *ws;
-	int ws_name_width, ws_name_height;
+	int text_width, text_height;
 	int x_offset = 0;
 
 	wl_list_for_each_reverse(ws, &state->workspaces, node) {
@@ -32,30 +32,28 @@ draw_workspaces(struct buffer_context *buf_ctx, struct labline_state *state)
 			current_face = &state->faces.secondary;
 		}
 
-		cairo_set_source_rgb(buf_ctx->cairo_ctx,
-			current_face->bg.r,
-			current_face->bg.g,
-			current_face->bg.b);
 		pango_layout_set_attributes(buf_ctx->pango_layout, NULL);
+
+		/* TODO: hard wrap workspace names at 20 chars or something */
+		cairo_set_source_rgb(buf_ctx->cairo_ctx, BG(*current_face));
 		pango_layout_set_text(buf_ctx->pango_layout, ws->name, -1);
-
 		pango_layout_get_pixel_size(buf_ctx->pango_layout,
-			&ws_name_width, &ws_name_height);
+			&text_width, &text_height);
 
-		int box_width = ws_name_width + 2*PADDING;
+		/* Draw a rectangle */
+		int box_width = text_width + 2*PADDING;
 		cairo_rectangle(buf_ctx->cairo_ctx, x_offset, 0,
 			box_width, state->height);
 		cairo_fill(buf_ctx->cairo_ctx);
 
-		cairo_set_source_rgb(buf_ctx->cairo_ctx,
-			current_face->fg.r,
-			current_face->fg.g,
-			current_face->fg.b);
+		/* Draw the workspace label inside the rectangle */
+		cairo_set_source_rgb(buf_ctx->cairo_ctx, FG(*current_face));
 		cairo_move_to(buf_ctx->cairo_ctx, x_offset + PADDING,
-			(state->height - ws_name_height) / 2.0);
+			(state->height - text_height) / 2.0);
 		pango_cairo_show_layout(buf_ctx->cairo_ctx,
 			buf_ctx->pango_layout);
 
+		/* Move forward */
 		x_offset += box_width;
 	}
 
@@ -71,9 +69,12 @@ draw_status(struct buffer_context *buf_ctx, struct labline_state *state,
 	}
 
 	pango_layout_set_attributes(buf_ctx->pango_layout, NULL);
+
+	/* Hard wrap the status section at 75% of the panel width */
 	pango_layout_set_width(buf_ctx->pango_layout,
 		state->width * 0.75 * PANGO_SCALE);
-	pango_layout_set_ellipsize(buf_ctx->pango_layout, PANGO_ELLIPSIZE_START);
+	pango_layout_set_ellipsize(buf_ctx->pango_layout,
+		PANGO_ELLIPSIZE_START);
 	pango_layout_set_wrap(buf_ctx->pango_layout, PANGO_WRAP_WORD_CHAR);
 	pango_layout_set_text(buf_ctx->pango_layout, state->statusline, -1);
 
@@ -82,26 +83,21 @@ draw_status(struct buffer_context *buf_ctx, struct labline_state *state,
 		&text_height);
 	int box_width = text_width + 2*PADDING;
 
-	int x_offset = state->width - box_width;
-	cairo_set_source_rgb(buf_ctx->cairo_ctx,
-		state->faces.secondary.bg.r,
-		state->faces.secondary.bg.g,
-		state->faces.secondary.bg.b);
+	/* Draw a rectangle */
+	cairo_set_source_rgb(buf_ctx->cairo_ctx, BG(state->faces.secondary));
 	cairo_rectangle(buf_ctx->cairo_ctx, state->width - box_width, 0,
 		box_width, state->height);
 	cairo_fill(buf_ctx->cairo_ctx);
 
+	/* Draw the statusline inside the rectangle */
 	int text_x_offset = state->width - box_width + PADDING;
 	int text_y_offset = (state->height - text_height) / 2.0;
-
-	cairo_set_source_rgb(buf_ctx->cairo_ctx,
-		state->faces.secondary.fg.r,
-		state->faces.secondary.fg.g,
-		state->faces.secondary.fg.b);
+	cairo_set_source_rgb(buf_ctx->cairo_ctx, FG(state->faces.secondary));
 	cairo_move_to(buf_ctx->cairo_ctx, text_x_offset, text_y_offset);
 
 	pango_cairo_show_layout(buf_ctx->cairo_ctx, buf_ctx->pango_layout);
 
+	int x_offset = state->width - box_width;
 	return x_offset;
 }
 
@@ -110,10 +106,9 @@ draw_window(struct buffer_context *buf_ctx, struct labline_state *state,
 		int workspaces_offset, int status_offset)
 {
 	if (!state->active_toplevel) {
+		/* Fill the rest of the panel */
 		cairo_set_source_rgb(buf_ctx->cairo_ctx,
-			state->faces.secondary.bg.r,
-			state->faces.secondary.bg.g,
-			state->faces.secondary.bg.b);
+			BG(state->faces.secondary));
 		cairo_rectangle(buf_ctx->cairo_ctx, workspaces_offset, 0,
 			status_offset - workspaces_offset, state->height);
 		cairo_fill(buf_ctx->cairo_ctx);
@@ -125,6 +120,7 @@ draw_window(struct buffer_context *buf_ctx, struct labline_state *state,
 		&toplevel_title_width, &toplevel_title_height);
 	int box_width = status_offset - workspaces_offset;
 
+	/* Hard wrap the window section to fit between ws and status */
 	pango_layout_set_attributes(buf_ctx->pango_layout, NULL);
 	pango_layout_set_width(buf_ctx->pango_layout,
 		(box_width - 2 * PADDING) * PANGO_SCALE);
@@ -133,22 +129,16 @@ draw_window(struct buffer_context *buf_ctx, struct labline_state *state,
 	pango_layout_set_text(buf_ctx->pango_layout,
 		state->active_toplevel->title, -1);
 
-	/* TODO: macro for passing rgb more easily */
-	cairo_set_source_rgb(buf_ctx->cairo_ctx,
-		state->faces.primary.bg.r,
-		state->faces.primary.bg.g,
-		state->faces.primary.bg.b);
+	/* Draw a rectangle */
+	cairo_set_source_rgb(buf_ctx->cairo_ctx, BG(state->faces.primary));
 	cairo_rectangle(buf_ctx->cairo_ctx, workspaces_offset, 0,
 		box_width, state->height);
 	cairo_fill(buf_ctx->cairo_ctx);
 
+	/* Draw the window title inside the rectangle */
 	int text_x_offset = workspaces_offset + PADDING;
 	int text_y_offset = (state->height - toplevel_title_height) / 2.0;
-
-	cairo_set_source_rgb(buf_ctx->cairo_ctx,
-		state->faces.primary.fg.r,
-		state->faces.primary.fg.g,
-		state->faces.primary.fg.b);
+	cairo_set_source_rgb(buf_ctx->cairo_ctx, FG(state->faces.primary));
 	cairo_move_to(buf_ctx->cairo_ctx, text_x_offset, text_y_offset);
 	pango_cairo_show_layout(buf_ctx->cairo_ctx, buf_ctx->pango_layout);
 }
