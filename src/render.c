@@ -51,7 +51,7 @@ draw_workspaces(struct buffer_context *buf_ctx, struct labline_state *state)
 			current_face->fg.r,
 			current_face->fg.g,
 			current_face->fg.b);
-		cairo_move_to(buf_ctx->cairo_ctx, x_offset + 4,
+		cairo_move_to(buf_ctx->cairo_ctx, x_offset + PADDING,
 			(state->height - ws_name_height) / 2.0);
 		pango_cairo_show_layout(buf_ctx->cairo_ctx,
 			buf_ctx->pango_layout);
