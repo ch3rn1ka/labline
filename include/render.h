@@ -11,7 +11,7 @@
 #include "buffer.h"
 #include "state.h"
 
-#define PADDING 4
+#define PADDING 6
 
 void render(struct labline_state *state);
 
