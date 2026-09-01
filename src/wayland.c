@@ -14,7 +14,7 @@
 #include "util.h"
 
 #include "ext-workspace-v1-client-protocol.h"
-#include "wlr-foreign-management-unstable-v1-client-protocol.h"
+#include "wlr-foreign-toplevel-management-unstable-v1-client-protocol.h"
 #include "wlr-layer-shell-unstable-v1-client-protocol.h"
 
 static void *

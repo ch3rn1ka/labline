@@ -10,7 +10,7 @@ Works well with other wlroots compositors that have static workspaces.
 
 Install dependencies:
 
-* make *
+* meson *
 * a C11 compiler *
 * wayland
 * wayland-protocols
