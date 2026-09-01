@@ -6,15 +6,16 @@ project(
     meson_version: '>=1.8.0',
     default_options: [
         'c_std=c11',
-        'warning_level=1'
+        'warning_level=2'
     ],
 )
 
 cc = meson.get_compiler('c')
 
 add_project_arguments(cc.get_supported_arguments([
-  '-pedantic',
-  '-D_POSIX_C_SOURCE=200809L',
+    '-Wno-unused-parameter',
+    '-pedantic',
+    '-D_POSIX_C_SOURCE=200809L'
 ]), language: 'c')
 
 wayland_client = dependency('wayland-client', version: '>=1.22.90')
