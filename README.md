@@ -1,32 +1,36 @@
 # labline
 
 labline is a status panel for labwc, similar to that of dwm or i3.
-Compile it with `make`, pipe some text into it, and you're good to go.
 Works well with other wlroots compositors that have static workspaces.
 
 ## Installation
 
 ### Compiling from source
 
-Install dependencies:
-
-* meson *
-* a C11 compiler *
-* wayland
-* wayland-protocols
-* wlr-protocols
-* pango
-* cairo
-* scdoc (optional: manpages) *
-* git (optional: version info) *
-
-*\* Compile-time dep*
-
-Run these commands:
+To build, simply run:
 ```
-make
-sudo make install
+meson setup build/
+meson compile -C build/
 ```
+
+Run-time dependencies include:
+- wayland
+- cairo, pango
+
+Build dependencies include:
+- meson, ninja, gcc/clang
+- git (optional: version control)
+- scdoc (optional: manpages)
+- wayland-protocols
+
+One-liner to install the dependencies on Arch:
+```
+pacman -S wayland wayland-protocols cairo pango meson gcc git scdoc
+```
+
+### From the AUR
+
+I'm planning to publish a PKGBUILD on the AUR shortly after the first release.
 
 ## Command line options
 
