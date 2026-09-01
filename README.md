@@ -19,8 +19,8 @@ Run-time dependencies include:
 
 Build dependencies include:
 - meson, ninja, gcc/clang
-- git (optional: version control)
-- scdoc (optional: manpages)
+- git *(optional: version control)*
+- scdoc *(optional: manpages)*
 - wayland-protocols
 
 One-liner to install the dependencies on Arch:
