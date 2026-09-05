@@ -1,7 +1,14 @@
 # labline
 
-labline is a status panel for labwc, similar to that of dwm or i3.
-Works well with other wlroots compositors that have static workspaces.
+labline is a status panel for labwc, similar to that of dwm. Works well
+with other wlroots compositors that have static workspaces.
+
+That being said, an effort was made not to stray from labwc upstream
+in terms of supported protocols and core design, so I don't guarantee
+100% compatibility with other compositors. The main offender here is
+probably the way labwc handles workspaces (stretching them across all
+outputs), as opposed to, for example, per-output workspace groups in
+Sway.
 
 ## Installation
 
