@@ -12,6 +12,20 @@
 #include "util.h"
 #include "wayland.h"
 
+static void
+draw_text_box(struct buffer_context *buf_ctx, struct face *face, int x, int box_width,
+		int box_height, int text_height)
+{
+	cairo_set_source_rgb(buf_ctx->cairo_ctx, BG(*face));
+	cairo_rectangle(buf_ctx->cairo_ctx, x, 0, box_width, box_height);
+	cairo_fill(buf_ctx->cairo_ctx);
+
+	cairo_set_source_rgb(buf_ctx->cairo_ctx, FG(*face));
+	cairo_move_to(buf_ctx->cairo_ctx, x + PADDING,
+		(box_height - text_height) / 2.0);
+	pango_cairo_show_layout(buf_ctx->cairo_ctx, buf_ctx->pango_layout);
+}
+
 static int
 draw_workspaces(struct buffer_context *buf_ctx, struct labline_state *state)
 {
@@ -35,23 +49,13 @@ draw_workspaces(struct buffer_context *buf_ctx, struct labline_state *state)
 		pango_layout_set_attributes(buf_ctx->pango_layout, NULL);
 
 		/* TODO: hard wrap workspace names at 20 chars or something */
-		cairo_set_source_rgb(buf_ctx->cairo_ctx, BG(*current_face));
 		pango_layout_set_text(buf_ctx->pango_layout, ws->name, -1);
 		pango_layout_get_pixel_size(buf_ctx->pango_layout,
 			&text_width, &text_height);
 
-		/* Draw a rectangle */
 		int box_width = text_width + 2*PADDING;
-		cairo_rectangle(buf_ctx->cairo_ctx, x_offset, 0,
-			box_width, state->height);
-		cairo_fill(buf_ctx->cairo_ctx);
-
-		/* Draw the workspace label inside the rectangle */
-		cairo_set_source_rgb(buf_ctx->cairo_ctx, FG(*current_face));
-		cairo_move_to(buf_ctx->cairo_ctx, x_offset + PADDING,
-			(state->height - text_height) / 2.0);
-		pango_cairo_show_layout(buf_ctx->cairo_ctx,
-			buf_ctx->pango_layout);
+		draw_text_box(buf_ctx, current_face, x_offset, box_width,
+			state->height, text_height);
 
 		/* Move forward */
 		x_offset += box_width;
@@ -81,23 +85,12 @@ draw_status(struct buffer_context *buf_ctx, struct labline_state *state,
 	int text_width, text_height;
 	pango_layout_get_pixel_size(buf_ctx->pango_layout, &text_width,
 		&text_height);
+
 	int box_width = text_width + 2*PADDING;
-
-	/* Draw a rectangle */
-	cairo_set_source_rgb(buf_ctx->cairo_ctx, BG(state->faces.secondary));
-	cairo_rectangle(buf_ctx->cairo_ctx, state->width - box_width, 0,
-		box_width, state->height);
-	cairo_fill(buf_ctx->cairo_ctx);
-
-	/* Draw the statusline inside the rectangle */
-	int text_x_offset = state->width - box_width + PADDING;
-	int text_y_offset = (state->height - text_height) / 2.0;
-	cairo_set_source_rgb(buf_ctx->cairo_ctx, FG(state->faces.secondary));
-	cairo_move_to(buf_ctx->cairo_ctx, text_x_offset, text_y_offset);
-
-	pango_cairo_show_layout(buf_ctx->cairo_ctx, buf_ctx->pango_layout);
-
 	int x_offset = state->width - box_width;
+	draw_text_box(buf_ctx, &state->faces.secondary, x_offset, box_width,
+		state->height, text_height);
+
 	return x_offset;
 }
 
@@ -115,9 +108,15 @@ draw_window(struct buffer_context *buf_ctx, struct labline_state *state,
 		return;
 	}
 
-	int toplevel_title_width, toplevel_title_height;
+	if (workspaces_offset >= status_offset) {
+		warn("Section overlap: workspaces_offset = %d, status_offset = %d",
+			workspaces_offset, status_offset);
+		return;
+	}
+
+	int text_width, text_height;
 	pango_layout_get_pixel_size(buf_ctx->pango_layout,
-		&toplevel_title_width, &toplevel_title_height);
+		&text_width, &text_height);
 	int box_width = status_offset - workspaces_offset;
 
 	/* Hard wrap the window section to fit between ws and status */
@@ -129,18 +128,8 @@ draw_window(struct buffer_context *buf_ctx, struct labline_state *state,
 	pango_layout_set_text(buf_ctx->pango_layout,
 		state->active_toplevel->title, -1);
 
-	/* Draw a rectangle */
-	cairo_set_source_rgb(buf_ctx->cairo_ctx, BG(state->faces.primary));
-	cairo_rectangle(buf_ctx->cairo_ctx, workspaces_offset, 0,
-		box_width, state->height);
-	cairo_fill(buf_ctx->cairo_ctx);
-
-	/* Draw the window title inside the rectangle */
-	int text_x_offset = workspaces_offset + PADDING;
-	int text_y_offset = (state->height - toplevel_title_height) / 2.0;
-	cairo_set_source_rgb(buf_ctx->cairo_ctx, FG(state->faces.primary));
-	cairo_move_to(buf_ctx->cairo_ctx, text_x_offset, text_y_offset);
-	pango_cairo_show_layout(buf_ctx->cairo_ctx, buf_ctx->pango_layout);
+	draw_text_box(buf_ctx, &state->faces.primary, workspaces_offset, box_width,
+		state->height, text_height);
 }
 
 static void
