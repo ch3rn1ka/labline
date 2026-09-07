@@ -7,14 +7,17 @@ That being said, an effort was made not to stray from labwc upstream
 in terms of supported protocols and core design, so I don't guarantee
 100% compatibility with other compositors. The main offender here is
 probably the way labwc handles workspaces (stretching them across all
-outputs), as opposed to, for example, per-output workspace groups in
-Sway.
+outputs, as opposed to, for example, per-output workspace groups in
+Sway).
 
 ## Installation
 
 ### Compiling from source
 
-To build, simply run:
+To build labline, you would use the same build tools and dependencies as with
+labwc.
+
+Simply run:
 ```
 meson setup build/
 meson compile -C build/
