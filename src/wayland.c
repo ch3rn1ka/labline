@@ -66,6 +66,11 @@ static const struct wl_registry_listener registry_listener = {
 	.global_remove = registry_global_remove
 };
 
+static struct workspace_callback_data {
+	struct labline_state *state;
+	struct workspace *workspace;
+};
+
 static void
 workspace_handle_name(void *data, struct ext_workspace_handle_v1 *handle,
 		const char *name)
@@ -191,6 +196,11 @@ layer_surface_closed(void *data, struct zwlr_layer_surface_v1 *layer_surface)
 static const struct zwlr_layer_surface_v1_listener layer_surface_listener = {
 	.configure = layer_surface_configure,
 	.closed = layer_surface_closed
+};
+
+static struct toplevel_callback_data {
+	struct labline_state *state;
+	struct toplevel *toplevel;
 };
 
 static void
