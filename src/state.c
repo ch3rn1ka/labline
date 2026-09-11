@@ -17,8 +17,6 @@
 #include "ext-workspace-v1-client-protocol.h"
 #include "wlr-layer-shell-unstable-v1-client-protocol.h"
 
-static char *help_message = "Usage: TODO\n";
-
 static int
 get_font_height(const char *fontname)
 {
@@ -103,6 +101,8 @@ hex_to_rgb(char *hex_code)
 static void
 parse_args(struct labline_state *state, int argc, char **argv)
 {
+	const char help_message[] = "Usage: TODO\n";
+
 	const struct option long_options[] = {
 		{"help",   no_argument,       NULL, 'h'},
 		{"anchor", required_argument, NULL, 'a'},
