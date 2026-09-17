@@ -72,11 +72,18 @@ draw_status(struct buffer_context *buf_ctx, struct labline_state *state,
 		return state->width;
 	}
 
+	int left_border = MAX(state->width * 0.75,
+		workspaces_offset + state->width * 0.25);
+	if (left_border < state->width * 0.05) {
+		warn("No space left for the statusline");
+		return state->width;
+	}
+
 	pango_layout_set_attributes(buf_ctx->pango_layout, NULL);
 
 	/* Hard wrap the status section at 75% of the panel width */
 	pango_layout_set_width(buf_ctx->pango_layout,
-		state->width * 0.75 * PANGO_SCALE);
+		left_border * PANGO_SCALE);
 	pango_layout_set_ellipsize(buf_ctx->pango_layout,
 		PANGO_ELLIPSIZE_START);
 	pango_layout_set_wrap(buf_ctx->pango_layout, PANGO_WRAP_WORD_CHAR);
