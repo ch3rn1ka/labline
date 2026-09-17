@@ -13,17 +13,16 @@
 #include "wayland.h"
 
 static void
-draw_text_box(struct buffer_context *buf_ctx, struct face *face, int x, int box_width,
-		int box_height, int text_height)
+draw_text_box(cairo_t *cairo_ctx, PangoLayout *pango_layout, struct face *face,
+		int x, int y, int box_width, int box_height, int text_height)
 {
-	cairo_set_source_rgb(buf_ctx->cairo_ctx, BG(*face));
-	cairo_rectangle(buf_ctx->cairo_ctx, x, 0, box_width, box_height);
-	cairo_fill(buf_ctx->cairo_ctx);
+	cairo_set_source_rgb(cairo_ctx, BG(*face));
+	cairo_rectangle(cairo_ctx, x, y, box_width, box_height);
+	cairo_fill(cairo_ctx);
 
-	cairo_set_source_rgb(buf_ctx->cairo_ctx, FG(*face));
-	cairo_move_to(buf_ctx->cairo_ctx, x + PADDING,
-		(box_height - text_height) / 2.0);
-	pango_cairo_show_layout(buf_ctx->cairo_ctx, buf_ctx->pango_layout);
+	cairo_set_source_rgb(cairo_ctx, FG(*face));
+	cairo_move_to(cairo_ctx, x + PADDING, (box_height - text_height) / 2.0);
+	pango_cairo_show_layout(cairo_ctx, pango_layout);
 }
 
 static int
@@ -54,8 +53,9 @@ draw_workspaces(struct buffer_context *buf_ctx, struct labline_state *state)
 			&text_width, &text_height);
 
 		int box_width = text_width + 2*PADDING;
-		draw_text_box(buf_ctx, current_face, x_offset, box_width,
-			state->height, text_height);
+		draw_text_box(buf_ctx->cairo_ctx, buf_ctx->pango_layout,
+			current_face, x_offset, 0, box_width, state->height,
+			text_height);
 
 		/* Move forward */
 		x_offset += box_width;
@@ -95,7 +95,8 @@ draw_status(struct buffer_context *buf_ctx, struct labline_state *state,
 
 	int box_width = text_width + 2*PADDING;
 	int x_offset = state->width - box_width;
-	draw_text_box(buf_ctx, &state->faces.secondary, x_offset, box_width,
+	draw_text_box(buf_ctx->cairo_ctx, buf_ctx->pango_layout,
+		&state->faces.secondary, x_offset, 0, box_width,
 		state->height, text_height);
 
 	return x_offset;
@@ -135,7 +136,8 @@ draw_window(struct buffer_context *buf_ctx, struct labline_state *state,
 	pango_layout_set_text(buf_ctx->pango_layout,
 		state->active_toplevel->title, -1);
 
-	draw_text_box(buf_ctx, &state->faces.primary, workspaces_offset, box_width,
+	draw_text_box(buf_ctx->cairo_ctx, buf_ctx->pango_layout,
+		&state->faces.primary, workspaces_offset, 0, box_width,
 		state->height, text_height);
 }
 
