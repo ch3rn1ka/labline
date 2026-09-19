@@ -26,13 +26,14 @@ pangocairo     = dependency('pangocairo')
 labline_inc = include_directories('include')
 
 subdir('protocols')
+subdir('docs')
 subdir('src')
 
 labline_deps = [
     wayland_client,
     cairo,
     pangocairo,
-    protocol_dep
+    protocols
 ]
 
 executable(

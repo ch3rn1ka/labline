@@ -23,6 +23,6 @@ protocol_srcs += xdg_shell
 protocol_srcs += layer_shell
 protocol_srcs += toplevel_manager
 
-protocol_dep = declare_dependency(
+protocols = declare_dependency(
     sources: protocol_srcs
 )
