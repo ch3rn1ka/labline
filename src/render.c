@@ -47,7 +47,6 @@ draw_workspaces(struct buffer_context *buf_ctx, struct labline_state *state)
 
 		pango_layout_set_attributes(buf_ctx->pango_layout, NULL);
 
-		/* TODO: hard wrap workspace names at 20 chars or something */
 		pango_layout_set_text(buf_ctx->pango_layout, ws->name, -1);
 		pango_layout_get_pixel_size(buf_ctx->pango_layout,
 			&text_width, &text_height);
@@ -72,9 +71,11 @@ draw_status(struct buffer_context *buf_ctx, struct labline_state *state,
 		return state->width;
 	}
 
-	int left_border = MAX(state->width * 0.75,
-		workspaces_offset + state->width * 0.25);
-	if (left_border < state->width * 0.05) {
+	int min_allowed_x = MAX(state->width * 0.25,
+		workspaces_offset + PADDING);
+	int max_width     = state->width - min_allowed_x;
+
+	if (max_width < state->width * 0.05) {
 		warn("No space left for the statusline");
 		return state->width;
 	}
@@ -82,10 +83,8 @@ draw_status(struct buffer_context *buf_ctx, struct labline_state *state,
 	pango_layout_set_attributes(buf_ctx->pango_layout, NULL);
 
 	/* Hard wrap the status section at 75% of the panel width */
-	pango_layout_set_width(buf_ctx->pango_layout,
-		left_border * PANGO_SCALE);
-	pango_layout_set_ellipsize(buf_ctx->pango_layout,
-		PANGO_ELLIPSIZE_START);
+	pango_layout_set_width(buf_ctx->pango_layout, max_width * PANGO_SCALE);
+	pango_layout_set_ellipsize(buf_ctx->pango_layout, PANGO_ELLIPSIZE_START);
 	pango_layout_set_wrap(buf_ctx->pango_layout, PANGO_WRAP_WORD_CHAR);
 	pango_layout_set_text(buf_ctx->pango_layout, state->statusline, -1);
 
@@ -106,7 +105,9 @@ static void
 draw_window(struct buffer_context *buf_ctx, struct labline_state *state,
 		int workspaces_offset, int status_offset)
 {
-	if (!state->active_toplevel) {
+	struct toplevel *toplevel = state->active_toplevel;
+
+	if (!toplevel) {
 		/* Fill the rest of the panel */
 		cairo_set_source_rgb(buf_ctx->cairo_ctx,
 			BG(state->faces.secondary));
@@ -117,7 +118,7 @@ draw_window(struct buffer_context *buf_ctx, struct labline_state *state,
 	}
 
 	if (workspaces_offset >= status_offset) {
-		warn("Section overlap: workspaces_offset = %d, status_offset = %d",
+		warn("Overlap: workspaces_offset = %d, status_offset = %d",
 			workspaces_offset, status_offset);
 		return;
 	}
@@ -133,8 +134,7 @@ draw_window(struct buffer_context *buf_ctx, struct labline_state *state,
 		(box_width - 2 * PADDING) * PANGO_SCALE);
 	pango_layout_set_ellipsize(buf_ctx->pango_layout, PANGO_ELLIPSIZE_END);
 	pango_layout_set_wrap(buf_ctx->pango_layout, PANGO_WRAP_WORD_CHAR);
-	pango_layout_set_text(buf_ctx->pango_layout,
-		state->active_toplevel->title, -1);
+	pango_layout_set_text(buf_ctx->pango_layout, toplevel->title, -1);
 
 	draw_text_box(buf_ctx->cairo_ctx, buf_ctx->pango_layout,
 		&state->faces.primary, workspaces_offset, 0, box_width,
@@ -166,6 +166,7 @@ render(struct labline_state *state)
 			buffer_realloc(buf_ctx, state);
 			wayland_buffer_add_listener(buf_ctx);
 		}
+
 		draw_panel(buf_ctx, state);
 		wl_surface_attach(state->surface, buf_ctx->wl_buffer, 0, 0);
 		wl_surface_damage_buffer(state->surface, 0, 0, state->width,
