@@ -17,6 +17,20 @@
 #include "wlr-foreign-toplevel-management-unstable-v1-client-protocol.h"
 #include "wlr-layer-shell-unstable-v1-client-protocol.h"
 
+/*
+ * It's probably a terrible way of doing this but I needed to cram a bunch of
+ * stuff in the listener callbacks. Hoping I'll work out a better approach.
+ */
+struct workspace_callback_data {
+	struct labline_state *state;
+	struct workspace *workspace;
+};
+
+struct toplevel_callback_data {
+	struct labline_state *state;
+	struct toplevel *toplevel;
+};
+
 static void *
 _bind_global(struct wl_registry *wl_registry, uint32_t iface_id,
 		const struct wl_interface *iface, uint32_t server_iface_version)
@@ -66,11 +80,6 @@ static const struct wl_registry_listener registry_listener = {
 	.global_remove = registry_global_remove
 };
 
-static struct workspace_callback_data {
-	struct labline_state *state;
-	struct workspace *workspace;
-};
-
 static void
 workspace_handle_name(void *data, struct ext_workspace_handle_v1 *handle,
 		const char *name)
@@ -117,16 +126,22 @@ workspace_handle_removed(void *data, struct ext_workspace_handle_v1 *handle)
 
 	wl_list_remove(&workspace->node);
 	ext_workspace_handle_v1_destroy(handle);
+
+	if (workspace->name) {
+		free(workspace->name);
+	}
+	free(workspace);
+	free(callback_data);
 }
 
 static const struct ext_workspace_handle_v1_listener
 workspace_handle_listener = {
-	.id = workspace_handle_id,
-	.name = workspace_handle_name,
-	.coordinates = workspace_handle_coordinates,
-	.state = workspace_handle_state,
-	.capabilities = workspace_handle_capabilities,
-	.removed = workspace_handle_removed
+	.id		= workspace_handle_id,
+	.name		= workspace_handle_name,
+	.coordinates	= workspace_handle_coordinates,
+	.state		= workspace_handle_state,
+	.capabilities	= workspace_handle_capabilities,
+	.removed	= workspace_handle_removed
 };
 
 static void
@@ -163,10 +178,10 @@ workspace_manager_finished() {}
 
 static const struct ext_workspace_manager_v1_listener
 workspace_manager_listener = {
-	.workspace = workspace_manager_workspace,
-	.workspace_group = workspace_manager_group,
-	.done = workspace_manager_done,
-	.finished = workspace_manager_finished
+	.workspace		= workspace_manager_workspace,
+	.workspace_group	= workspace_manager_group,
+	.done			= workspace_manager_done,
+	.finished		= workspace_manager_finished
 };
 
 static void
@@ -194,13 +209,8 @@ layer_surface_closed(void *data, struct zwlr_layer_surface_v1 *layer_surface)
 }
 
 static const struct zwlr_layer_surface_v1_listener layer_surface_listener = {
-	.configure = layer_surface_configure,
-	.closed = layer_surface_closed
-};
-
-static struct toplevel_callback_data {
-	struct labline_state *state;
-	struct toplevel *toplevel;
+	.configure	= layer_surface_configure,
+	.closed		= layer_surface_closed
 };
 
 static void
@@ -219,13 +229,17 @@ toplevel_handle_title(void *data,
 	callback_data->state->needs_render = true;
 }
 
-static void toplevel_handle_app_id() {}
+static void
+toplevel_handle_app_id() {}
 
-static void toplevel_handle_output_enter() {}
+static void
+toplevel_handle_output_enter() {}
 
-static void toplevel_handle_output_leave() {}
+static void
+toplevel_handle_output_leave() {}
 
-static void toplevel_handle_state(void *data,
+static void
+toplevel_handle_state(void *data,
 		struct zwlr_foreign_toplevel_handle_v1 *handle,
 		struct wl_array *state)
 {
@@ -249,7 +263,6 @@ static void toplevel_handle_state(void *data,
 	}
 
 	if (!activated && labline_state->active_toplevel == this_toplevel) {
-		/* Previously active toplevel became inactive */
 		labline_state->active_toplevel = NULL;
 	}
 
