@@ -18,6 +18,8 @@ struct workspace {
 struct toplevel {
 	struct zwlr_foreign_toplevel_handle_v1 *handle;
 	char *title;
+	struct wl_array state;
+	struct wl_list node;
 };
 
 void wayland_buffer_add_listener(struct buffer_context *buf_ctx);

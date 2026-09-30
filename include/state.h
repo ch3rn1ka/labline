@@ -23,9 +23,7 @@ struct face {
 };
 
 struct faces {
-	/* Accented sections: active workspace & toplevel */
 	struct face primary;
-	/* Dim sections: inactive workspaces & statusline */
 	struct face secondary;
 };
 
@@ -42,8 +40,8 @@ struct labline_state
 	struct ext_workspace_manager_v1 *workspace_manager;
 
 	struct wl_list workspaces;
-
-	struct toplevel *active_toplevel;
+	struct wl_list toplevels;
+	/* struct toplevel *active_toplevel; */
 
 	struct buffer_context *buffer;
 	char statusline[BUFSIZ];

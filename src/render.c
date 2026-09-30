@@ -12,6 +12,8 @@
 #include "util.h"
 #include "wayland.h"
 
+#include "wlr-foreign-toplevel-management-unstable-v1-client-protocol.h"
+
 static void
 draw_text_box(cairo_t *cairo_ctx, PangoLayout *pango_layout, struct face *face,
 		int x, int y, int box_width, int box_height, int text_height)
@@ -33,10 +35,10 @@ draw_workspaces(struct buffer_context *buf_ctx, struct labline_state *state)
 	}
 	pango_layout_set_width(buf_ctx->pango_layout, -1);
 
-	struct workspace *ws;
 	int text_width, text_height;
 	int x_offset = 0;
 
+	struct workspace *ws;
 	wl_list_for_each_reverse(ws, &state->workspaces, node) {
 		struct face *current_face;
 		if (ws->state == 1) {
@@ -102,12 +104,10 @@ draw_status(struct buffer_context *buf_ctx, struct labline_state *state,
 }
 
 static void
-draw_window(struct buffer_context *buf_ctx, struct labline_state *state,
+draw_windows(struct buffer_context *buf_ctx, struct labline_state *state,
 		int workspaces_offset, int status_offset)
 {
-	struct toplevel *toplevel = state->active_toplevel;
-
-	if (!toplevel) {
+	if (wl_list_empty(&state->toplevels)) {
 		/* Fill the rest of the panel */
 		cairo_set_source_rgb(buf_ctx->cairo_ctx,
 			BG(state->faces.secondary));
@@ -123,22 +123,42 @@ draw_window(struct buffer_context *buf_ctx, struct labline_state *state,
 		return;
 	}
 
-	int text_width, text_height;
-	pango_layout_get_pixel_size(buf_ctx->pango_layout,
-		&text_width, &text_height);
-	int box_width = status_offset - workspaces_offset;
+	int toplevels_n = wl_list_length(&state->toplevels);
+	int box_width = (status_offset - workspaces_offset) / toplevels_n;
 
-	/* Hard wrap the window section to fit between ws and status */
-	pango_layout_set_attributes(buf_ctx->pango_layout, NULL);
-	pango_layout_set_width(buf_ctx->pango_layout,
-		(box_width - 2 * PADDING) * PANGO_SCALE);
-	pango_layout_set_ellipsize(buf_ctx->pango_layout, PANGO_ELLIPSIZE_END);
-	pango_layout_set_wrap(buf_ctx->pango_layout, PANGO_WRAP_WORD_CHAR);
-	pango_layout_set_text(buf_ctx->pango_layout, toplevel->title, -1);
+	int x_offset = workspaces_offset;
+	struct toplevel *toplevel;
+	wl_list_for_each_reverse(toplevel, &state->toplevels, node) {
+		struct face *current_face = &state->faces.secondary;
+		uint32_t *state_elem;
+		wl_array_for_each(state_elem, &toplevel->state) {
+			switch(*state_elem) {
+				/* case ZWLR_FOREIGN_TOPLEVEL_HANDLE_V1_STATE_MINIMIZED: */
+				/* case ZWLR_FOREIGN_TOPLEVEL_HANDLE_V1_STATE_MAXIMIZED: */
+				/* case ZWLR_FOREIGN_TOPLEVEL_HANDLE_V1_STATE_FULLSCREEN: */
+				/* 	break; */
+				case ZWLR_FOREIGN_TOPLEVEL_HANDLE_V1_STATE_ACTIVATED:
+					current_face = &state->faces.primary;
+					break;
+			}
+		}
 
-	draw_text_box(buf_ctx->cairo_ctx, buf_ctx->pango_layout,
-		&state->faces.primary, workspaces_offset, 0, box_width,
-		state->height, text_height);
+		int text_width, text_height;
+		pango_layout_get_pixel_size(buf_ctx->pango_layout,
+			&text_width, &text_height);
+
+		pango_layout_set_attributes(buf_ctx->pango_layout, NULL);
+		pango_layout_set_width(buf_ctx->pango_layout,
+			(box_width - 2 * PADDING) * PANGO_SCALE);
+		pango_layout_set_ellipsize(buf_ctx->pango_layout, PANGO_ELLIPSIZE_END);
+		pango_layout_set_wrap(buf_ctx->pango_layout, PANGO_WRAP_WORD_CHAR);
+		pango_layout_set_text(buf_ctx->pango_layout, toplevel->title, -1);
+
+		draw_text_box(buf_ctx->cairo_ctx, buf_ctx->pango_layout,
+			current_face, x_offset, 0, box_width,
+			state->height, text_height);
+		x_offset += box_width;
+	}
 }
 
 static void
@@ -146,7 +166,7 @@ draw_panel(struct buffer_context *buf_ctx, struct labline_state *state)
 {
 	int workspaces_offset = draw_workspaces(buf_ctx, state);
 	int status_offset = draw_status(buf_ctx, state, workspaces_offset);
-	draw_window(buf_ctx, state, workspaces_offset, status_offset);
+	draw_windows(buf_ctx, state, workspaces_offset, status_offset);
 
 	cairo_surface_flush(buf_ctx->cairo_surface);
 }

@@ -247,31 +247,29 @@ toplevel_handle_state(void *data,
 	struct labline_state *labline_state = callback_data->state;
 	struct toplevel *this_toplevel = callback_data->toplevel;
 
-	bool activated = false;
-	uint32_t *state_elem;
-	wl_array_for_each(state_elem, state) {
-		switch(*state_elem) {
-			case ZWLR_FOREIGN_TOPLEVEL_HANDLE_V1_STATE_MINIMIZED:
-			case ZWLR_FOREIGN_TOPLEVEL_HANDLE_V1_STATE_MAXIMIZED:
-			case ZWLR_FOREIGN_TOPLEVEL_HANDLE_V1_STATE_FULLSCREEN:
-				break;
-			case ZWLR_FOREIGN_TOPLEVEL_HANDLE_V1_STATE_ACTIVATED:
-				labline_state->active_toplevel = this_toplevel;
-				activated = true;
-				break;
-		}
-	}
-
-	if (!activated && labline_state->active_toplevel == this_toplevel) {
-		labline_state->active_toplevel = NULL;
-	}
+	/* TODO: fix memory leak? */
+	wl_array_copy(&this_toplevel->state, state);
 
 	labline_state->needs_render = true;
 }
 
 static void toplevel_handle_done() {}
 
-static void toplevel_handle_closed() {}
+static void
+toplevel_handle_closed(void *data, struct zwlr_foreign_toplevel_handle_v1 *handle)
+{
+	struct toplevel_callback_data *callback_data = data;
+	struct labline_state *state = callback_data->state;
+
+	struct toplevel *toplevel;
+	wl_list_for_each_reverse(toplevel, &state->toplevels, node) {
+		if (toplevel->handle == handle) {
+			wl_list_remove(&toplevel->node);
+			state->needs_render = true;
+			break;
+		}
+	}
+}
 
 static void toplevel_handle_parent() {}
 
@@ -293,16 +291,19 @@ toplevel_manager_toplevel(void *data,
 		struct zwlr_foreign_toplevel_handle_v1 *handle)
 {
 	struct labline_state *state = data;
+	struct toplevel_callback_data *callback_data =
+		calloc(1, sizeof(struct toplevel_callback_data));
+
 	struct toplevel *new_toplevel = calloc(1, sizeof(struct toplevel));
 	new_toplevel->handle = handle;
 
-	struct toplevel_callback_data *callback_data =
-		calloc(1, sizeof(struct toplevel_callback_data));
 	callback_data->toplevel = new_toplevel;
 	callback_data->state = state;
 
 	zwlr_foreign_toplevel_handle_v1_add_listener(handle,
 		&toplevel_handle_listener, callback_data);
+	wl_array_init(&new_toplevel->state);
+	wl_list_insert(&state->toplevels, &new_toplevel->node);
 }
 
 static void
@@ -372,6 +373,7 @@ wayland_init(struct labline_state *state)
 		&workspace_manager_listener, state);
 
 	wl_list_init(&state->workspaces);
+	wl_list_init(&state->toplevels);
 
 	/* Toplevel manager */
 	if (!state->toplevel_manager) {
@@ -380,7 +382,7 @@ wayland_init(struct labline_state *state)
 	zwlr_foreign_toplevel_manager_v1_add_listener(state->toplevel_manager,
 		&toplevel_manager_listener, state);
 
-	state->active_toplevel = NULL;
+	/* state->active_toplevel = NULL; */
 
 	wl_display_roundtrip(state->display);
 	wl_surface_commit(state->surface);
