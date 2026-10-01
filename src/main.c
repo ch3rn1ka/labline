@@ -1,7 +1,8 @@
 /* SPDX-License-Identifier: GPL-2.0-only */
-#include <stdio.h>
+#include <errno.h>
 #include <poll.h>
 #include <stdbool.h>
+#include <stdio.h>
 #include <string.h>
 #include <unistd.h>
 
@@ -28,28 +29,36 @@ main(int argc, char **argv)
 
 		while (wl_display_prepare_read(state->display) != 0) {
 			if (wl_display_dispatch_pending(state->display) == -1) {
-				goto clean_up;
-			};
+				die("Couldn't dispatch pending events");
+			}
 		}
-		wl_display_flush(state->display);
+		while (wl_display_flush(state->display) == -1) {
+			if (errno != EAGAIN) {
+				die("Wayland display disconnected or socket error");
+			}
+		}
 
-		if (poll(fds, 2, -1) <= 0) {
+		int ret = poll(fds, 2, -1);
+		if (ret <= 0) {
 			wl_display_cancel_read(state->display);
-			goto clean_up;
+			if (ret == -1 && errno == EINTR) {
+				continue;
+			}
+			break;
 		}
 
 		/* Events from the Wayland fd */
 		if (fds[1].revents & (POLLHUP | POLLERR)) {
 			wl_display_cancel_read(state->display);
-			goto clean_up;
+			die("Failed to get events from Wayland fd");
 		}
 
 		if (fds[1].revents & POLLIN) {
 			if (wl_display_read_events(state->display) == -1) {
-				goto clean_up;
+				die("Couldn't read events from display");
 			}
 			if (wl_display_dispatch_pending(state->display) == -1) {
-				goto clean_up;
+				die("Couldn't dispatch pending events");
 			}
 		} else {
 			wl_display_cancel_read(state->display);
@@ -57,22 +66,23 @@ main(int argc, char **argv)
 
 		/* Input from stdin */
 		if (fds[0].revents & POLLERR) {
-			goto clean_up;
+			die("POLLERR on stdin");
 		}
 
-		if (fds[0].revents & POLLIN) {
+		if (fds[0].revents & (POLLIN | POLLHUP)) {
 			if (fgets(state->statusline, BUFSIZ, stdin)) {
 				int length = strlen(state->statusline);
-				if (state->statusline[length - 1] == '\n') {
+				if (length > 0 && state->statusline[length - 1] == '\n') {
 					state->statusline[length - 1] = '\0';
 				}
 				state->needs_render = true;
+			} else if (feof(stdin)) {
+				fds[0].fd = -1;
 			} else {
-				goto clean_up;
+				warn("Failed to read status from stdin");
 			}
 		}
 	}
 
-clean_up:
 	return 0;
 }
