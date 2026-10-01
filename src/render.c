@@ -124,10 +124,11 @@ draw_windows(struct buffer_context *buf_ctx, struct labline_state *state,
 	}
 
 	int toplevels_n = wl_list_length(&state->toplevels);
-	int box_width = (status_offset - workspaces_offset) / toplevels_n;
+	double box_width = (status_offset - workspaces_offset) / toplevels_n;
 
-	int x_offset = workspaces_offset;
 	struct toplevel *toplevel;
+	int x_offset = workspaces_offset;
+
 	wl_list_for_each_reverse(toplevel, &state->toplevels, node) {
 		struct face *current_face = &state->faces.secondary;
 		uint32_t *state_elem;
