@@ -50,13 +50,11 @@ draw_workspaces(struct buffer_context *buf_ctx, struct labline_state *state)
 		pango_layout_set_attributes(buf_ctx->pango_layout, NULL);
 
 		pango_layout_set_text(buf_ctx->pango_layout, ws->name, -1);
-		pango_layout_get_pixel_size(buf_ctx->pango_layout,
-			&text_width, &text_height);
+		pango_layout_get_pixel_size(buf_ctx->pango_layout, &text_width, &text_height);
 
 		int box_width = text_width + 2*PADDING;
 		draw_text_box(buf_ctx->cairo_ctx, buf_ctx->pango_layout,
-			current_face, x_offset, 0, box_width, state->height,
-			text_height);
+			current_face, x_offset, 0, box_width, state->height, text_height);
 
 		/* Move forward */
 		x_offset += box_width;
@@ -73,8 +71,7 @@ draw_status(struct buffer_context *buf_ctx, struct labline_state *state,
 		return state->width;
 	}
 
-	int min_allowed_x = MAX(state->width * 0.25,
-		workspaces_offset + PADDING);
+	int min_allowed_x = MAX(state->width * 0.25, workspaces_offset + PADDING);
 	int max_width     = state->width - min_allowed_x;
 
 	if (max_width < state->width * 0.05) {
@@ -91,8 +88,7 @@ draw_status(struct buffer_context *buf_ctx, struct labline_state *state,
 	pango_layout_set_text(buf_ctx->pango_layout, state->statusline, -1);
 
 	int text_width, text_height;
-	pango_layout_get_pixel_size(buf_ctx->pango_layout, &text_width,
-		&text_height);
+	pango_layout_get_pixel_size(buf_ctx->pango_layout, &text_width, &text_height);
 
 	int box_width = text_width + 2*PADDING;
 	int x_offset = state->width - box_width;
@@ -109,8 +105,7 @@ draw_windows(struct buffer_context *buf_ctx, struct labline_state *state,
 {
 	if (wl_list_empty(&state->toplevels)) {
 		/* Fill the rest of the panel */
-		cairo_set_source_rgb(buf_ctx->cairo_ctx,
-			BG(state->faces.secondary));
+		cairo_set_source_rgb(buf_ctx->cairo_ctx, BG(state->faces.secondary));
 		cairo_rectangle(buf_ctx->cairo_ctx, workspaces_offset, 0,
 			status_offset - workspaces_offset, state->height);
 		cairo_fill(buf_ctx->cairo_ctx);
@@ -145,8 +140,7 @@ draw_windows(struct buffer_context *buf_ctx, struct labline_state *state,
 		}
 
 		int text_width, text_height;
-		pango_layout_get_pixel_size(buf_ctx->pango_layout,
-			&text_width, &text_height);
+		pango_layout_get_pixel_size(buf_ctx->pango_layout, &text_width, &text_height);
 
 		pango_layout_set_attributes(buf_ctx->pango_layout, NULL);
 		pango_layout_set_width(buf_ctx->pango_layout,
@@ -156,8 +150,7 @@ draw_windows(struct buffer_context *buf_ctx, struct labline_state *state,
 		pango_layout_set_text(buf_ctx->pango_layout, toplevel->title, -1);
 
 		draw_text_box(buf_ctx->cairo_ctx, buf_ctx->pango_layout,
-			current_face, x_offset, 0, box_width,
-			state->height, text_height);
+			current_face, x_offset, 0, box_width, state->height, text_height);
 		x_offset += box_width;
 	}
 }
@@ -190,8 +183,7 @@ render(struct labline_state *state)
 
 		draw_panel(buf_ctx, state);
 		wl_surface_attach(state->surface, buf_ctx->wl_buffer, 0, 0);
-		wl_surface_damage_buffer(state->surface, 0, 0, state->width,
-			state->height);
+		wl_surface_damage_buffer(state->surface, 0, 0, state->width, state->height);
 		wl_surface_commit(state->surface);
 		buf_ctx->busy = true;
 	}

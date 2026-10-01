@@ -123,8 +123,7 @@ parse_args(struct labline_state *state, int argc, char **argv)
 				exit(EXIT_SUCCESS);
 
 			case 'a': {
-				uint32_t sides =
-					ZWLR_LAYER_SURFACE_V1_ANCHOR_LEFT
+				uint32_t sides = ZWLR_LAYER_SURFACE_V1_ANCHOR_LEFT
 					| ZWLR_LAYER_SURFACE_V1_ANCHOR_RIGHT;
 				if (strcmp(optarg, "bottom") == 0) {
 					state->anchor = sides

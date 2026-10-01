@@ -53,20 +53,20 @@ registry_global(void *data, struct wl_registry *wl_registry,
 	struct labline_state *state = data;
 
 	if (strcmp(iface_name, wl_compositor_interface.name) == 0) {
-		state->compositor = bind_global(wl_compositor_interface);
+		state->compositor =
+			bind_global(wl_compositor_interface);
 	} else if (strcmp(iface_name, wl_shm_interface.name) == 0) {
-		state->shm = bind_global(wl_shm_interface);
-	} else if (strcmp(iface_name,
-			zwlr_layer_shell_v1_interface.name) == 0) {
-		state->layer_shell = bind_global(zwlr_layer_shell_v1_interface);
-	} else if (strcmp(iface_name,
-			ext_workspace_manager_v1_interface.name) == 0) {
-		state->workspace_manager =
-			bind_global(ext_workspace_manager_v1_interface);
-	} else if (strcmp(iface_name,
-			zwlr_foreign_toplevel_manager_v1_interface.name) == 0) {
-		state->toplevel_manager =
-			bind_global(zwlr_foreign_toplevel_manager_v1_interface);
+		state->shm =
+			bind_global(wl_shm_interface);
+	} else if (strcmp(iface_name, zwlr_layer_shell_v1_interface.name) == 0) {
+		state->layer_shell =
+			bind_global(zwlr_layer_shell_v1_interface);
+	} else if (strcmp(iface_name, ext_workspace_manager_v1_interface.name) == 0) {
+		state->workspace_manager
+			= bind_global(ext_workspace_manager_v1_interface);
+	} else if (strcmp(iface_name, zwlr_foreign_toplevel_manager_v1_interface.name) == 0) {
+		state->toplevel_manager
+			= bind_global(zwlr_foreign_toplevel_manager_v1_interface);
 	}
 }
 
@@ -76,8 +76,8 @@ static void
 registry_global_remove() {}
 
 static const struct wl_registry_listener registry_listener = {
-	.global = registry_global,
-	.global_remove = registry_global_remove
+	.global		= registry_global,
+	.global_remove	= registry_global_remove
 };
 
 static void
@@ -191,7 +191,7 @@ layer_surface_configure(void *data, struct zwlr_layer_surface_v1 *layer_surface,
 	struct labline_state *state = data;
 
 	if (width != state->width || height != state->height) {
-		state->width = width;
+		state->width  = width;
 		state->stride = width * 4;
 		state->height = height;
 
@@ -275,14 +275,14 @@ static void toplevel_handle_parent() {}
 
 static const struct zwlr_foreign_toplevel_handle_v1_listener
 toplevel_handle_listener = {
-	.title = toplevel_handle_title,
-	.app_id = toplevel_handle_app_id,
-	.output_enter = toplevel_handle_output_enter,
-	.output_leave = toplevel_handle_output_leave,
-	.state = toplevel_handle_state,
-	.done = toplevel_handle_done,
-	.closed = toplevel_handle_closed,
-	.parent = toplevel_handle_parent
+	.title		= toplevel_handle_title,
+	.app_id		= toplevel_handle_app_id,
+	.output_enter	= toplevel_handle_output_enter,
+	.output_leave	= toplevel_handle_output_leave,
+	.state		= toplevel_handle_state,
+	.done		= toplevel_handle_done,
+	.closed		= toplevel_handle_closed,
+	.parent		= toplevel_handle_parent
 };
 
 static void
@@ -354,16 +354,12 @@ wayland_init(struct labline_state *state)
 
 	/* Layer surface */
 	state->surface = wl_compositor_create_surface(state->compositor);
-	state->layer_surface =
-		zwlr_layer_shell_v1_get_layer_surface(state->layer_shell,
-			state->surface, NULL, ZWLR_LAYER_SHELL_V1_LAYER_TOP,
-			"labline");
+	state->layer_surface = zwlr_layer_shell_v1_get_layer_surface(state->layer_shell,
+		state->surface, NULL, ZWLR_LAYER_SHELL_V1_LAYER_TOP, "labline");
 	zwlr_layer_surface_v1_set_size(state->layer_surface, 0, state->height);
 	zwlr_layer_surface_v1_set_anchor(state->layer_surface, state->anchor);
-	zwlr_layer_surface_v1_set_exclusive_zone(state->layer_surface,
-		state->height);
-	zwlr_layer_surface_v1_add_listener(state->layer_surface,
-		&layer_surface_listener, state);
+	zwlr_layer_surface_v1_set_exclusive_zone(state->layer_surface, state->height);
+	zwlr_layer_surface_v1_add_listener(state->layer_surface, &layer_surface_listener, state);
 
 	/* Workspace manager */
 	if (!state->workspace_manager) {
@@ -381,8 +377,6 @@ wayland_init(struct labline_state *state)
 	}
 	zwlr_foreign_toplevel_manager_v1_add_listener(state->toplevel_manager,
 		&toplevel_manager_listener, state);
-
-	/* state->active_toplevel = NULL; */
 
 	wl_display_roundtrip(state->display);
 	wl_surface_commit(state->surface);

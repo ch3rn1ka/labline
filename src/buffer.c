@@ -57,8 +57,7 @@ buffer_realloc(struct buffer_context *buf_ctx, struct labline_state *state)
 	}
 	buf_ctx->buf = buf;
 
-	struct wl_shm_pool *pool = wl_shm_create_pool(state->shm, fd,
-		buf_ctx->buf_size);
+	struct wl_shm_pool *pool = wl_shm_create_pool(state->shm, fd, buf_ctx->buf_size);
 	buf_ctx->wl_buffer = wl_shm_pool_create_buffer(pool, 0, state->width,
 		state->height, state->stride, WL_SHM_FORMAT_ARGB8888);
 	wl_shm_pool_destroy(pool);
@@ -71,11 +70,9 @@ buffer_realloc(struct buffer_context *buf_ctx, struct labline_state *state)
 	buf_ctx->cairo_ctx = cairo_create(buf_ctx->cairo_surface);
 	buf_ctx->pango_layout = pango_cairo_create_layout(buf_ctx->cairo_ctx);
 
-	buf_ctx->pango_font_desc =
-		pango_font_description_from_string(state->font);
+	buf_ctx->pango_font_desc = pango_font_description_from_string(state->font);
 
-	pango_layout_set_font_description(buf_ctx->pango_layout,
-		buf_ctx->pango_font_desc);
+	pango_layout_set_font_description(buf_ctx->pango_layout, buf_ctx->pango_font_desc);
 	pango_layout_set_width(buf_ctx->pango_layout, state->width * PANGO_SCALE);
 
 	buf_ctx->stale = false;
